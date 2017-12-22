@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div style="width:100%;height: 100%">
+    <form id="orglook" class="window-form" >
+        <table  class="form-table">
+            <input id="id" type="hidden" th:value="${org.id}"/>
+            <tr>
+                <td>上级组织:</td><td><input id="parentId" readonly="true" th:value="${org.parentId}" class="easyui-combobox" url="/system/org/selectListHasRoot?useState=0" valueField="id" textField="orgName"/></td>
+            </tr>
+            <tr>
+                <td>组织编号:</td><td><input id="orgCode" readonly="true" th:value="${org.orgCode}" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>组织代码:</td><td><input id="orgNum" readonly="true" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>组织名称:</td><td><input id="orgName" readonly="true" th:value="${org.orgName}" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>组织类型:</td>
+                <td><input id="orgType" readonly="true"  th:value="${org.orgType}" class="easyui-combobox"
+                           url="/system/dictvalue/selectListByType?type=orgType" valueField="dictVal" textField="dictName"/>
+                </td>
+            </tr>
+            <tr>
+                <td>排序:</td><td><input id="orderNum" readonly="true" th:value="${org.orderNum}" class="easyui-numberbox" value=""/></td>
+            </tr>
+        </table>
+        <div style="text-align: center" class="window-form-button">
+            <input type="button" class="easyui-linkbutton" value="关闭" onclick="cancelOrgWin()"/>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function cancelOrgWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>

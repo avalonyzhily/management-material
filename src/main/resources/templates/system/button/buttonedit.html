@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div style="width:100%;height: 100%">
+    <form id="buttonedit" class="window-form">
+        <input id="id" type="hidden" th:value="${button.id}"/>
+        <table class="form-table">
+            <tr>
+                <td>所属模块:</td><td><input id="menuId" th:value="${button.menuId}" required="true" editable="false" class="easyui-combobox" url="/system/menu/selectList?menuType=O" valueField="id" textField="menuName"/></td>
+            </tr>
+            <tr>
+                <td>按钮编码:</td><td><input id="buttonCode" th:value="${button.buttonCode}" readonly="true" required="true" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>按钮名称:</td><td><input id="buttonName" th:value="${button.buttonName}" required="true" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>描述:</td><td><input id="description" multiline="true" style="height: 100%" th:value="${button.description}" class="easyui-textbox" value=""/></td>
+            </tr>
+        </table>
+        <div style="text-align: center" class="window-form-button">
+            <input type="button" class="easyui-linkbutton" value="保存" onclick="updateButton()"/>
+            <input type="button" class="easyui-linkbutton" value="取消" onclick="cancelButtonWin()"/>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function updateButton() {
+        var flag = $("#buttonedit").form("validate");
+        if(!flag){
+            return;
+        }
+        var button = {};
+        var id = $("#id").val();
+        var menuId = $("#menuId").combobox("getValue");
+        var buttonCode = $("#buttonCode").textbox("getValue");
+        var buttonName = $("#buttonName").textbox("getValue");
+        var description = $("#description").textbox("getValue");
+        button.id = id;
+        button.menuId = menuId;
+        button.buttonCode = buttonCode;
+        button.buttonName = buttonName;
+        button.description = description;
+        $.ajax({
+            url:"/system/button/save",
+            type:"post",
+            contentType:"application/json;charset=utf-8",
+            data:JSON.stringify(button),
+            success:function(data){
+                if(data.code=="success"){
+                    $.messager.show({
+                        title:"消息",
+                        msg:data.msg,
+                        timeout:2000
+                    })
+                    $("#dd").dialog("close");
+                    $('#buttonDatagrid').datagrid('load');
+                }else{
+                    alert(data.msg);
+                }
+            }
+        })
+    }
+    function cancelButtonWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>

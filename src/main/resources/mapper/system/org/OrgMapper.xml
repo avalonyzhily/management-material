@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OrgMapper">
+
+	<!-- 单个查询-->
+	<select id="selectOne" parameterType="String" resultType="Org">
+		SELECT
+		ID AS "id",
+		PARENT_ID AS "parentId",
+		ORG_CODE AS "orgCode",
+		ORG_NUM AS "orgNum",
+		ORG_NAME AS "orgName",
+		ORG_TYPE AS "orgType",
+		USE_STATE AS "useState",ORDER_NUM AS "orderNum",
+		CREATE_TIME AS "createTime",CREATE_BY AS "createBy",UPDATE_TIME AS "updateTime",
+		UPDATE_BY AS "updateBy",DELETED AS "deleted",VERSION AS "version"
+		FROM SYS_ORG
+		WHERE ID = #{id,jdbcType=VARCHAR} AND DELETED = 0
+	</select>
+	<select id="getMaxCurrentOrgCode" parameterType="String" resultType="String">
+		SELECT MAX(ORG_CODE) AS "orgCode"
+		FROM SYS_ORG
+		WHERE PARENT_ID = #{parentId,jdbcType=VARCHAR}
+	</select>
+	<!--列表查询 -->
+	<select id="selectList" parameterType="Org" resultType="Org">
+		SELECT
+		<include refid="fullSelect"/>
+		FROM SYS_ORG
+		WHERE DELETED = 0
+		<include refid="fullCondition"/>
+		ORDER BY ORDER_NUM ASC
+	</select>
+	<!--列表查询带分页 -->
+	<select id="selectListGrid" parameterType="Org" resultType="Map">
+		SELECT
+		ID AS "id",
+		PARENT_ID AS "parentId",
+		CASE WHEN PARENT_ID !='0' THEN PARENT_ID END AS "_parentId",
+		ORG_CODE AS "orgCode",
+		ORG_NUM AS "orgNum",
+		ORG_NAME AS "orgName",
+		CASE WHEN ORG_TYPE = 'C' THEN '公司'
+		WHEN ORG_TYPE = 'D' THEN '部门'
+		WHEN ORG_TYPE = 'P' THEN '岗位'
+		END AS "orgType",
+		USE_STATE AS "useState",
+		CASE WHEN ORG_TYPE = 'C' THEN 'open'
+		END AS "state",
+		CASE WHEN USE_STATE  = 0 THEN '启用'
+		WHEN USE_STATE  = 1 THEN '停用'
+		END AS "useStateStr",ORDER_NUM AS "orderNum",
+		CREATE_TIME AS "createTime",CREATE_BY AS "createBy",UPDATE_TIME AS "updateTime",
+		UPDATE_BY AS "updateBy",DELETED AS "deleted",VERSION AS "version"
+		FROM SYS_ORG O
+		WHERE O.DELETED = 0
+		<include refid="fullCondition"/>
+		ORDER BY O.ORDER_NUM ASC
+	</select>
+	<select id="selectTree" resultType="Map">
+		SELECT
+		O.ID AS "id",
+		O.ORG_NAME AS "name",
+		O.ORG_CODE AS "orgCode",
+		O.ORG_NUM AS "orgNum",
+		O.PARENT_ID AS "pId",
+		CASE WHEN ORG_TYPE = 'C' THEN 'true'
+		END open
+		FROM SYS_ORG O
+		WHERE O.DELETED = 0 AND ORG_TYPE != 'P'
+		ORDER BY ORDER_NUM ASC
+	</select>
+	<!-- 单体插入 -->
+	<insert id="save" parameterType="Org">
+		INSERT INTO SYS_ORG
+		<include refid="fullSave"/>
+		VALUES (
+		#{id,jdbcType=VARCHAR},#{parentId,jdbcType=VARCHAR},
+		#{orgCode,jdbcType=VARCHAR},#{orgNum,jdbcType=VARCHAR},#{orgName,jdbcType=VARCHAR},#{orgType,jdbcType=VARCHAR},
+		0,#{orderNum,jdbcType=INTEGER},SYSDATE,#{createBy,jdbcType=VARCHAR},SYSDATE,
+		#{updateBy,jdbcType=VARCHAR},0,0
+		)
+	</insert>
+	<!-- 单体更新 -->
+	<update id="update" parameterType="Org">
+		UPDATE SYS_ORG SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		<include refid="fullUpdate"/>
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 单体删除 -->
+	<update id="delete" parameterType="Map">
+		UPDATE SYS_ORG SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		DELETED = 1,
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 批量删除 -->
+	<update id="batchDelete" parameterType="Map">
+		UPDATE SYS_ORG SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		DELETED = 1,
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE DELETED = 0 AND ID in
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	<!-- 单个启停 -->
+	<update id="updateState" parameterType="Map">
+		UPDATE SYS_ORG SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		USE_STATE = #{useState,jdbcType=INTEGER},
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 批量启停 -->
+	<update id="batchUpdateState" parameterType="Map">
+		UPDATE SYS_ORG SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		USE_STATE = #{useState,jdbcType=INTEGER},
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE DELETED = 0 AND ID in
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	<!-- ================================================================================================== -->
+	<sql id="fullSelect">
+		ID AS "id",PARENT_ID AS "parentId",ORG_CODE AS "orgCode",ORG_NUM AS "orgNum",
+		ORG_NAME AS "orgName",ORG_TYPE AS "orgType",
+		CASE WHEN ORG_TYPE = 'C' or ORG_TYPE = 'D' THEN '0'
+		WHEN ORG_TYPE = 'P' THEN '1'
+		END AS "state",
+		USE_STATE AS "useState",ORDER_NUM AS "orderNum",
+		CREATE_TIME AS "createTime",CREATE_BY AS "createBy",UPDATE_TIME AS "updateTime",
+		UPDATE_BY AS "updateBy",DELETED AS "deleted",VERSION AS "version"
+	</sql>
+	<sql id="fullCondition">
+		<if test="id != null and id !=''">
+			AND ID = #{id,jdbcType=VARCHAR}
+		</if>
+		<if test="parentId != null and parentId !=''">
+			AND PARENT_ID = #{parentId,jdbcType=VARCHAR}
+		</if>
+		<if test="orgCode != null and orgCode !=''">
+			AND ORG_CODE = #{orgCode,jdbcType=VARCHAR}
+		</if>
+		<if test="orgNum != null and orgNum !=''">
+			AND ORG_NUM = #{orgNum,jdbcType=VARCHAR}
+		</if>
+		<if test="orgName != null and orgName !=''">
+			AND ORG_NAME = #{orgName,jdbcType=VARCHAR}
+		</if>
+		<if test="orgType != null and orgType !=''">
+			AND ORG_TYPE = #{orgType,jdbcType=VARCHAR}
+		</if>
+		<if test="useState != null and useState !=''">
+			AND USE_STATE = #{useState,jdbcType=INTEGER}
+		</if>
+	</sql>
+	<sql id="fullSave">
+		(ID,PARENT_ID,ORG_CODE,ORG_NUM,
+		ORG_NAME,ORG_TYPE,USE_STATE,ORDER_NUM,
+		CREATE_TIME,CREATE_BY,UPDATE_TIME,
+		UPDATE_BY,DELETED,VERSION )
+	</sql>
+	<sql id="fullUpdate">
+		<if test="parentId != null and parentId !=''">
+			PARENT_ID = #{parentId,jdbcType=VARCHAR},
+		</if>
+		<if test="orgCode != null and orgCode !=''">
+			ORG_CODE = #{orgCode,jdbcType=VARCHAR},
+		</if>
+		<if test="orgName != null and orgName !=''">
+			ORG_NAME = #{orgName,jdbcType=VARCHAR},
+		</if>
+		<if test="orgType != null and orgType !=''">
+			ORG_TYPE = #{orgType,jdbcType=VARCHAR},
+		</if>
+		<if test="orderNum != null and orderNum !=''">
+			ORDER_NUM = #{orderNum,jdbcType=VARCHAR},
+		</if>
+	</sql>
+</mapper>

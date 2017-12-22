@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/bootstrap/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="/myfile/mycss/table.css">
+    <script type="text/javascript" src="/easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="/easyui/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/easyui/locale/easyui-lang-zh_CN.js"></script>
+</head>
+<body>
+<div class="easyui-layout" fit="true">
+    <div id="dataTable" border="false" region="center" style="height: 100%">
+        <table id="menuTreeGrid" class="easyui-treegrid" style="width:100%;height: 100%"
+               data-options="
+               url:'/system/menu/selectListGridNoPage',
+               idField:'id',
+               treeField:'menuName',
+               singleSelect:false,
+               toolbar:'#toolbars'">
+            <thead>
+            <tr>
+                <th field="_check" checkbox="true"></th>
+                <th field="menuName" formatter="formatLook" width="300">菜单名称</th>
+                <th field="menuCode" width="100">菜单编码</th>
+                <th field="resourceUrl" width="300">资源路径</th>
+                <th field="orderNum" width="60">排序</th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+    <div id="toolbars">
+        <a id="add" th:if="${s.isPermitted('menu_add') or userAccount == 'admin'} " onclick="openAdd()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-add'">添加</a>
+        <a id="edit" th:if="${s.isPermitted('menu_edit') or userAccount == 'admin'} " onclick="edit()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-edit'">编辑</a>
+        <a id="del" th:if="${s.isPermitted('menu_del') or userAccount == 'admin'} " onclick="delSelected()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-no'">删除</a>
+    </div>
+</div>
+<div id="dd" class="easyui-window"></div>
+</body>
+<script type="text/javascript">
+    $(function() {
+        $('#dd').window('close');
+    });
+    function formatLook(value,row,index){
+        return '<a onclick="look(\''+row.id+'\')">'+value+'</a>';
+    }
+    function openAdd() {
+        $('#dd').window({
+            title: '新增菜单',
+            width: 500,
+            height: 300,
+            left:"100px",
+            top:"0px",
+            collapsible:false,
+            minimizable:false,
+            maximizable:false,
+            closed: false,
+            cache: false,
+            href: '/system/menu/add',
+            modal: true
+        });
+    }
+    function edit() {
+        var row = $("#menuTreeGrid").datagrid("getSelected");
+        if(row){
+            $('#dd').window({
+                title: '编辑菜单',
+                width: 500,
+                height: 300,
+                left:"100px",
+                top:"0px",
+                collapsible:false,
+                minimizable:false,
+                maximizable:false,
+                closed: false,
+                cache: false,
+                href: '/system/menu/edit?id='+row.id,
+                modal: true
+            });
+        }else{
+            alert("请选择一行记录");
+        }
+    }
+    function look(id) {
+        $('#dd').window({
+            title: '查看菜单',
+            width: 500,
+            height: 300,
+            left:"100px",
+            top:"0px",
+            collapsible:false,
+            minimizable:false,
+            maximizable:false,
+            closed: false,
+            cache: false,
+            href: '/system/menu/look?id='+id,
+            modal: true
+        });
+    }
+    function delSelected() {
+        var rows = $('#menuTreeGrid').datagrid('getSelections')
+        var id = "";
+        if(rows && rows.length>0){
+            for(var i = 0;i<rows.length;i++){
+                id +=rows[i].id+",";
+            }
+            id = id.substring(0,id.length-1);
+            $.ajax({
+                url:"/system/menu/delete",
+                type:"post",
+                data:{"idsStr":id},
+                success:function(data){
+                    if(data.code=="success"){
+                        $.messager.show({
+                            title:"消息",
+                            msg:data.msg,
+                            timeout:2000
+                        })
+                        $('#menuTreeGrid').treegrid('reload');
+                    }else{
+                        alert(data.msg);
+                    }
+                }
+            })
+        }else{
+            alert("请选择数据");
+        }
+    }
+
+</script>
+</html>

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ButtonMapper">
+	<!-- 根据用户ID获取按钮集合 -->
+	<select id="selectByUserId" parameterType="String" resultType="Button">
+		SELECT B.ID AS "id",B.BUTTON_CODE AS "buttonCode",B.BUTTON_NAME AS "buttonName"
+		FROM SYS_BUTTON B
+		LEFT JOIN SYS_ROLE_BUTTON RB ON B.ID = RB.BUTTON_ID
+		LEFT JOIN SYS_ROLE_USER RU ON RB.ROLE_ID = RU.ROLE_ID
+		LEFT JOIN SYS_USER U ON RU.USER_ID = U.ID
+		WHERE B.DELETED = 0 AND U.ID = #{userId}
+		ORDER BY B.UPDATE_TIME DESC
+	</select>
+	<!-- 单个查询-->
+	<select id="selectOne" parameterType="String" resultType="Button">
+		SELECT
+		<include refid="fullSelect"/>
+		FROM SYS_BUTTON B
+		WHERE B.ID = #{id,jdbcType=VARCHAR} AND B.DELETED = 0
+	</select>
+	<!--多个多条件查询 -->
+	<select id="selectList" parameterType="Button" resultType="Button">
+		SELECT
+		<include refid="fullSelect"/>
+		FROM SYS_BUTTON B
+		WHERE B.DELETED = 0
+		<include refid="fullCondition"/>
+		ORDER BY B.UPDATE_TIME DESC
+	</select>
+	<!--列表查询 -->
+	<select id="selectListGrid" parameterType="Button" resultType="Map">
+		SELECT M.MENU_NAME AS "menuName",
+		<include refid="fullSelect"/>
+		FROM SYS_BUTTON B
+		LEFT JOIN SYS_MENU M ON B.MENU_ID = M.ID
+		WHERE B.DELETED = 0
+		<include refid="fullCondition"/>
+		ORDER BY B.UPDATE_TIME DESC
+	</select>
+
+	<select id="selectListByRoleId" parameterType="Map" resultType="Map">
+		SELECT
+		M.MENU_NAME AS "menuName",
+	  	B.ID AS "id",
+	  	B.BUTTON_CODE AS "buttonCode",
+	  	B.BUTTON_NAME AS "buttonName",
+		CASE WHEN RB.ID IS NOT NULL THEN 'true'
+		END AS "checked"
+		FROM SYS_BUTTON B
+		LEFT JOIN SYS_MENU M ON B.MENU_ID = M.ID
+		LEFT JOIN SYS_ROLE_BUTTON RB ON RB.BUTTON_ID = B.ID AND RB.ROLE_ID = #{roleId,jdbcType=VARCHAR}
+		WHERE B.DELETED = 0 AND B.MENU_ID = #{menuId,jdbcType=VARCHAR}
+		ORDER BY B.UPDATE_TIME DESC
+	</select>
+	<select id="selectListByRoleIdEdit" parameterType="Map" resultType="Map">
+		SELECT
+		B.ID AS "id"
+		FROM SYS_BUTTON B
+		LEFT JOIN SYS_MENU M ON B.MENU_ID = M.ID
+		LEFT JOIN SYS_ROLE_BUTTON RB ON RB.BUTTON_ID = B.ID
+		WHERE B.DELETED = 0 AND RB.ROLE_ID = #{roleId,jdbcType=VARCHAR}
+		ORDER BY B.UPDATE_TIME DESC
+	</select>
+	<!-- 单体插入 -->
+	<insert id="save" parameterType="Button">
+		INSERT INTO SYS_BUTTON
+		<include refid="fullSave"/>
+		VALUES (
+		#{id,jdbcType=VARCHAR},#{menuId,jdbcType=VARCHAR},#{buttonCode,jdbcType=VARCHAR},
+		#{buttonName,jdbcType=VARCHAR},#{description,jdbcType=VARCHAR},
+		SYSDATE,#{createBy,jdbcType=VARCHAR},SYSDATE,
+		#{updateBy,jdbcType=VARCHAR},0,0
+		)
+	</insert>
+	<!-- 单体更新 -->
+	<update id="update" parameterType="Button">
+		UPDATE SYS_BUTTON SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		<include refid="fullUpdate"/>
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 单体删除 -->
+	<update id="delete" parameterType="Map">
+		UPDATE SYS_BUTTON SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		DELETED = 1,
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 批量删除 -->
+	<update id="batchDelete" parameterType="Map">
+		UPDATE SYS_BUTTON SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		DELETED = 1,
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE DELETED = 0 AND ID in
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	<!-- ================================================================================================== -->
+	<sql id="fullSelect">
+		B.ID AS "id",B.MENU_ID AS "menuId",B.BUTTON_CODE AS "buttonCode",B.BUTTON_NAME AS "buttonName",
+		B.DESCRIPTION AS "description",B.CREATE_TIME AS "createTime",B.CREATE_BY AS "createBy",B.UPDATE_TIME AS "updateTime",
+		B.UPDATE_BY AS "updateBy",B.DELETED AS "deleted",B.VERSION AS "version"
+	</sql>
+	<sql id="fullCondition">
+		<if test="id != null and id !=''">
+			AND B.ID = #{id,jdbcType=VARCHAR}
+		</if>
+		<if test="menuId != null and menuId !=''">
+			AND B.MENU_ID = #{menuId,jdbcType=VARCHAR}
+		</if>
+		<if test="buttonCode != null and buttonCode !=''">
+			AND B.BUTTON_CODE = #{buttonCode,jdbcType=VARCHAR}
+		</if>
+		<if test="buttonName != null and buttonName !=''">
+			AND B.BUTTON_NAME = #{buttonName,jdbcType=VARCHAR}
+		</if>
+		<if test="description != null and description !=''">
+			AND B.DESCRIPTION = #{description,jdbcType=VARCHAR}
+		</if>
+	</sql>
+	<sql id="fullSave">
+		(ID,MENU_ID,BUTTON_CODE,BUTTON_NAME,DESCRIPTION,
+		CREATE_TIME,CREATE_BY,UPDATE_TIME,
+		UPDATE_BY,DELETED,VERSION)
+	</sql>
+	<sql id="fullUpdate">
+		<if test="menuId != null and menuId !=''">
+			MENU_ID = #{menuId,jdbcType=VARCHAR},
+		</if>
+		<if test="buttonCode != null and buttonCode !=''">
+			BUTTON_CODE = #{buttonCode,jdbcType=VARCHAR},
+		</if>
+		<if test="buttonName != null and buttonName !=''">
+			BUTTON_NAME = #{buttonName,jdbcType=VARCHAR},
+		</if>
+		<if test="description != null and description !=''">
+			DESCRIPTION = #{description,jdbcType=VARCHAR},
+		</if>
+	</sql>
+</mapper>

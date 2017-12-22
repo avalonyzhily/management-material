@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="UserMapper">
+
+	<!-- 登陆验证查询 -->
+	<select id="checkLogin" parameterType="User" resultType="User">
+		SELECT
+		U.ID AS "id",U.USER_ACCOUNT AS "userAccount",
+		U.PASSWORD AS "password",U.USER_CODE AS "userCode",U.USER_NAME AS "userName",
+		U.DEPT_ID AS "deptId",U.POST_ID AS "postId",U.EMAIL AS "email",U.PHONE AS "phone",
+		U.LAST_LOGIN AS "lastLogin",U.USE_STATE AS "useState"
+		FROM SYS_USER U
+		WHERE U.USER_ACCOUNT = #{userAccount,jdbcType=VARCHAR}
+		AND U.PASSWORD = #{password,jdbcType=VARCHAR}
+		AND U.DELETED = 0
+	</select>
+	<!-- 单个查询-->
+	<select id="selectOne" parameterType="String" resultType="User">
+		SELECT
+		<include refid="fullSelect"/>
+		FROM SYS_USER U
+		WHERE U.ID = #{id,jdbcType=VARCHAR} AND U.DELETED = 0
+	</select>
+	<!-- 集合多条件查询-->
+	<select id="selectList" parameterType="User" resultType="User">
+		SELECT
+		<include refid="fullSelect"/>
+		FROM SYS_USER U
+		WHERE U.DELETED = 0
+		<include refid="fullCondition"/>
+		ORDER BY U.ORDER_NUM ASC
+	</select>
+	<!--列表查询 -->
+	<select id="selectListGrid" parameterType="User" resultType="Map">
+		SELECT
+		U.ID AS "id",U.USER_ACCOUNT AS "userAccount",U.USER_CODE AS "userCode",U.USER_NAME AS "userName",
+		U.DEPT_ID AS "deptId",U.POST_ID AS "postId",
+		D.ORG_NAME AS "deptName",P.ORG_NAME AS "postName",
+		U.EMAIL AS "email",U.PHONE AS "phone",
+		U.LAST_LOGIN AS "lastLogin",U.USE_STATE AS "useState",
+		CASE WHEN U.USE_STATE  = 0 THEN '启用'
+		WHEN U.USE_STATE  = 1 THEN '停用'
+		END AS "useStateStr",
+		U.ORDER_NUM AS "orderNum",
+		U.CREATE_TIME AS "createTime",U.CREATE_BY AS "createBy",U.UPDATE_TIME AS "updateTime",
+		U.UPDATE_BY AS "updateBy",U.DELETED AS "deleted",U.VERSION AS "version"
+		FROM SYS_USER U
+		LEFT JOIN SYS_ORG D ON U.DEPT_ID = D.ID
+		LEFT JOIN SYS_ORG P ON U.POST_ID = P.ID
+		WHERE U.DELETED = 0
+		<if test="orgCode !=null and orgCode!=''">
+			AND D.ORG_CODE LIKE #{orgCode,jdbcType=VARCHAR}||'%'
+		</if>
+		<include refid="fullCondition"/>
+		ORDER BY U.ORDER_NUM DESC
+	</select>
+	<!--列表查询带分页 -->
+	<select id="selectableListByRoleId" parameterType="String" resultType="Map">
+		SELECT DISTINCT
+		U.ID AS "id",U.USER_ACCOUNT AS "userAccount",U.USER_NAME AS "userName"
+		FROM SYS_USER U
+		WHERE U.DELETED =0 AND U.ID NOT IN
+			(SELECT
+			U.ID AS id
+			FROM SYS_USER U
+			LEFT JOIN SYS_ROLE_USER RU ON U.ID = RU.USER_ID
+			WHERE U.DELETED = 0 AND RU.ROLE_ID = #{roleId,jdbcType=VARCHAR})
+		ORDER BY U.UPDATE_TIME DESC
+	</select>
+	<select id="selectedListByRoleId" parameterType="String" resultType="Map">
+		SELECT
+		U.ID AS "id",U.USER_ACCOUNT AS "userAccount",U.USER_NAME AS "userName"
+		FROM SYS_USER U
+		LEFT JOIN SYS_ROLE_USER RU ON U.ID = RU.USER_ID
+		WHERE U.DELETED = 0 AND RU.ROLE_ID = #{roleId,jdbcType=VARCHAR}
+		ORDER BY U.UPDATE_TIME DESC
+	</select>
+	<!-- 单体插入 -->
+	<insert id="save" parameterType="User">
+		INSERT INTO SYS_USER
+		<include refid="fullSave"/>
+		VALUES (
+		#{id,jdbcType=VARCHAR},#{userAccount,jdbcType=VARCHAR},#{userCode,jdbcType=VARCHAR},
+		#{userName,jdbcType=VARCHAR},#{password,jdbcType=VARCHAR},#{deptId,jdbcType=VARCHAR},
+		#{postId,jdbcType=VARCHAR},#{email,jdbcType=VARCHAR},#{phone,jdbcType=VARCHAR},#{lastLogin,jdbcType=DATE},
+		0,#{orderNum,jdbcType=INTEGER},SYSDATE,#{createBy,jdbcType=VARCHAR},SYSDATE,
+		#{updateBy,jdbcType=VARCHAR},0,0
+		)
+	</insert>
+	<!-- 修改密码 -->
+	<update id="updatePwd" parameterType="User">
+		UPDATE SYS_USER SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		PASSWORD = #{password,jdbcType=VARCHAR},
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 单体更新 -->
+	<update id="update" parameterType="User">
+		UPDATE SYS_USER SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		<include refid="fullUpdate"/>
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 单体删除 -->
+	<update id="delete" parameterType="Map">
+		UPDATE SYS_USER SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		DELETED = 1,
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 批量删除 -->
+	<update id="batchDelete" parameterType="Map">
+		UPDATE SYS_USER SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		DELETED = 1,
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE DELETED = 0 AND ID in
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	<!-- 单个启停 -->
+	<update id="updateState" parameterType="Map">
+		UPDATE SYS_USER SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		USE_STATE = #{useState,jdbcType=INTEGER},
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 批量启停 -->
+	<update id="batchUpdateState" parameterType="Map">
+		UPDATE SYS_USER SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		USE_STATE = #{useState,jdbcType=INTEGER},
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE DELETED = 0 AND ID in
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	<!-- ================================================================================================== -->
+	<sql id="fullSelect">
+		U.ID AS "id",U.USER_ACCOUNT AS "userAccount",U.USER_CODE AS "userCode",U.USER_NAME AS "userName",
+		U.DEPT_ID AS "deptId",U.POST_ID AS "postId",U.EMAIL AS "email",U.PHONE AS "phone",
+		U.LAST_LOGIN AS "lastLogin",U.USE_STATE AS "useState",U.ORDER_NUM AS "orderNum",
+		U.CREATE_TIME AS "createTime",U.CREATE_BY AS "createBy",U.UPDATE_TIME AS "updateTime",
+		U.UPDATE_BY AS "updateBy",U.DELETED AS "deleted",U.VERSION AS "version"
+	</sql>
+	<sql id="fullCondition">
+		<if test="id != null and id !=''">
+			AND U.ID = #{id,jdbcType=VARCHAR}
+		</if>
+		<if test="userAccount != null and userAccount !=''">
+			AND U.USER_ACCOUNT = #{userAccount,jdbcType=VARCHAR}
+		</if>
+		<if test="userCode != null and userCode !=''">
+			AND U.USER_CODE = #{userCode,jdbcType=VARCHAR}
+		</if>
+		<if test="userName != null and userName !=''">
+			AND U.USER_NAME = #{userName,jdbcType=VARCHAR}
+		</if>
+		<if test="email != null and email !=''">
+			AND U.EMAIL = #{email,jdbcType=INTEGER}
+		</if>
+		<if test="phone != null and phone !=''">
+			AND U.PHONE = #{phone,jdbcType=INTEGER}
+		</if>
+		<if test="useState != null and useState !=''">
+			AND U.USE_STATE = #{state,jdbcType=INTEGER}
+		</if>
+	</sql>
+	<sql id="fullSave">
+		(ID,USER_ACCOUNT,USER_CODE,USER_NAME,PASSWORD,DEPT_ID,POST_ID,EMAIL,PHONE,
+		LAST_LOGIN,USE_STATE,ORDER_NUM,CREATE_TIME,CREATE_BY,UPDATE_TIME,
+		UPDATE_BY,DELETED,VERSION)
+	</sql>
+	<sql id="fullUpdate">
+		<if test="userCode != null and userCode !=''">
+			USER_CODE = #{userCode,jdbcType=VARCHAR},
+		</if>
+		<if test="userName != null and userName !=''">
+			USER_NAME = #{userName,jdbcType=VARCHAR},
+		</if>
+		<if test="deptId != null and deptId !=''">
+			DEPT_ID = #{deptId,jdbcType=VARCHAR},
+		</if>
+		<if test="postId != null and postId !=''">
+			POST_ID = #{postId,jdbcType=VARCHAR},
+		</if>
+		<if test="email != null and email !=''">
+			EMAIL = #{email,jdbcType=INTEGER},
+		</if>
+		<if test="phone != null and phone !=''">
+			PHONE = #{phone,jdbcType=INTEGER},
+		</if>
+		<if test="orderNum != null and orderNum !=''">
+			ORDER_NUM = #{orderNum,jdbcType=INTEGER},
+		</if>
+	</sql>
+</mapper>

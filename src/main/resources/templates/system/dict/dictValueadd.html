@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div style="width:100%;height: 100%">
+    <form id="dictValueadd" class="window-form">
+        <table class="form-table">
+            <tr>
+                <td>字典类型:</td><td><input id="typeId" class="easyui-combobox" required="true" editable="false" url="/system/dicttype/selectList?useState=0" valueField="id" textField="typeName"/></td>
+            </tr>
+            <tr>
+                <td>字典键:</td><td><input id="dictVal" class="easyui-textbox" required="true" value=""/></td>
+            </tr>
+            <tr>
+                <td>字典值:</td><td><input id="dictName" class="easyui-textbox" required="true" value=""/></td>
+            </tr>
+            <tr>
+                <td>描述:</td><td><input id="description" multiline="true" style="height: 100%" class="easyui-textbox" value=""/></td>
+            </tr>
+        </table>
+        <div style="text-align: center" class="window-form-button">
+            <input type="button" class="easyui-linkbutton" value="保存" onclick="saveDictValue()"/>
+            <input type="button" class="easyui-linkbutton" value="取消" onclick="cancelDictValueWin()"/>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function saveDictValue() {
+        var flag = $("#dictValueadd").form("validate");
+        if(!flag){
+            return;
+        }
+        var dictValue = {};
+        var typeId = $("#typeId").combobox("getValue");
+        var dictName = $("#dictName").textbox("getValue");
+        var dictVal = $("#dictVal").textbox("getValue");
+        var description = $("#description").textbox("getValue");
+        dictValue.typeId = typeId;
+        dictValue.dictName = dictName;
+        dictValue.dictVal = dictVal;
+        dictValue.description = description;
+        $.ajax({
+            url:"/system/dictvalue/save",
+            type:"post",
+            contentType:"application/json;charset=utf-8",
+            data:JSON.stringify(dictValue),
+            success:function(data){
+                if(data.code=="success"){
+                    $.messager.show({
+                        title:"消息",
+                        msg:data.msg,
+                        timeout:2000
+                    })
+                    $("#dd").dialog("close");
+                    $('#datagridValue').datagrid('load');
+                }else{
+                    alert(data.msg);
+                }
+            }
+        })
+    }
+    function cancelDictValueWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>

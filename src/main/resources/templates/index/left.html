@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- 本页面涉及的js函数，都在head.jsp页面中     -->
+<body>
+<div region="west" collapsible="false" title="模块名称" style="width:200px;" th:fragment="left">
+    <ul id="module"  class="nav nav-list" style="width: 99%">
+        <li th:each="module : ${moduleList}" th:id="${module.id}"  >
+            <a style="cursor:pointer;" target="mainFrame"
+               th:onclick="'javascript:addTab(\''+${module.id}+'\',\''+${module.menuName}+'\',\'/'+${module.resourceUrl}+'\')'"
+               th:text="${module.menuName}"></a>
+        </li>
+    </ul>
+</div>
+</body>
+</html>

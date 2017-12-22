@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/bootstrap/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="/myfile/mycss/table.css">
+    <script type="text/javascript" src="/easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="/easyui/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/easyui/locale/easyui-lang-zh_CN.js"></script>
+</head>
+<body>
+<div class="easyui-layout" fit="true">
+    <div id="dataTable" border="false" region="center" style="height: 100%" >
+        <table id="orgTreeGrid" class="easyui-treegrid" style="height: 100%;width: 100%"
+               data-options="
+               url:'/system/org/selectListGrid',
+               idField:'id',
+               treeField:'orgName',
+               singleSelect:false,
+               toolbar:'#toolbars',
+               rowStyler:rowStyle"
+
+               >
+            <thead>
+            <tr>
+                <th field="_check" checkbox="true"></th>
+                <th field="orgName" formatter="formatLook" width="300">组织名称</th>
+                <th field="orgCode" align="left" width="100">组织编号</th>
+                <th field="orgNum" align="center" width="100">组织代码</th>
+                <th field="orgType" align="center" width="100">组织类型</th>
+                <th field="orderNum" align="center" width="60">排序</th>
+                <th field="useStateStr" align="center" width="60">状态</th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+    <div id="toolbars">
+        <a id="add" th:if="${s.isPermitted('org_add') or userAccount == 'admin'} " onclick="openAdd()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-add'">添加</a>
+        <a id="edit" th:if="${s.isPermitted('org_edit') or userAccount == 'admin'} " onclick="edit()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-edit'">编辑</a>
+        <a id="del" th:if="${s.isPermitted('org_del') or userAccount == 'admin'} " onclick="delSelected()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-no'">删除</a>
+        <a id="use" th:if="${s.isPermitted('org_use') or userAccount == 'admin'} " onclick="useSelected()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-ok'">启用</a>
+        <a id="unuse" th:if="${s.isPermitted('org_unuse') or userAccount == 'admin'} " onclick="unuseSelected()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-lock'">停用</a>
+    </div>
+</div>
+<div id="dd" class="easyui-window"></div>
+</body>
+<script type="text/javascript">
+    $(function() {
+        $('#dd').window('close');
+    });
+    function rowStyle(row) {
+        if(row.useState==0){
+            return 'color:blue;';
+        }else {
+            return 'color:red;';
+        }
+    }
+    function formatLook(value,row,index){
+        return '<a onclick="look(\''+row.id+'\')">'+value+'</a>';
+    }
+    function openAdd() {
+        $('#dd').window({
+            title: '新增组织',
+            left:"100px",
+            top:"0px",
+            width: 500,
+            height: 300,
+            collapsible:false,
+            minimizable:false,
+            maximizable:false,
+            closed: false,
+            cache: false,
+            href: '/system/org/add',
+            modal: true
+        });
+    }
+    function edit() {
+        var row = $('#orgTreeGrid').datagrid('getSelected');
+        if(row){
+            $('#dd').window({
+                title: '编辑组织',
+                width: 500,
+                height: 300,
+                left:"100px",
+                top:"0px",
+                collapsible:false,
+                minimizable:false,
+                maximizable:false,
+                closed: false,
+                cache: false,
+                href: '/system/org/edit?id='+row.id,
+                modal: true
+            });
+        }else{
+            alert("请选择一行记录");
+        }
+
+    }
+    function look(id) {
+        $('#dd').window({
+            title: '查看组织',
+            width: 500,
+            height: 300,
+            left:"100px",
+            top:"0px",
+            collapsible:false,
+            minimizable:false,
+            maximizable:false,
+            closed: false,
+            cache: false,
+            href: '/system/org/look?id='+id,
+            modal: true
+        });
+    }
+    function delSelected() {
+        var rows = $('#orgTreeGrid').datagrid('getSelections')
+        var id = "";
+        if(rows && rows.length>0){
+            for(var i = 0;i<rows.length;i++){
+                id +=rows[i].id+",";
+            }
+            id = id.substring(0,id.length-1);
+            $.ajax({
+                url:"/system/org/delete",
+                type:"post",
+                data:{"idsStr":id},
+                success:function(data){
+                    if(data.code=="success"){
+                        $.messager.show({
+                            title:"消息",
+                            msg:data.msg,
+                            timeout:2000
+                        })
+                        $('#orgTreeGrid').treegrid('reload');
+                    }else{
+                        alert(data.msg);
+                    }
+                }
+            })
+        }else{
+            alert("请选择数据");
+        }
+    }
+    function useSelected() {
+        var rows = $('#orgTreeGrid').datagrid('getSelections')
+        var id = "";
+        if(rows && rows.length>0){
+            for(var i = 0;i<rows.length;i++){
+                id +=rows[i].id+",";
+            }
+            id = id.substring(0,id.length-1);
+            $.ajax({
+                url:"/system/org/updateState",
+                type:"post",
+                data:{"idsStr":id,"useState":0},
+                success:function(data){
+                    if(data.code=="success"){
+                        $.messager.show({
+                            title:"消息",
+                            msg:data.msg,
+                            timeout:2000
+                        })
+                        $('#orgTreeGrid').treegrid('reload');
+                    }else{
+                        alert(data.msg);
+                    }
+                }
+            })
+        }else{
+            alert("请选择数据")
+        }
+    }
+    function unuseSelected() {
+        var rows = $('#orgTreeGrid').datagrid('getSelections')
+        var id = "";
+        if(rows && rows.length>0){
+            for(var i = 0;i<rows.length;i++){
+                id +=rows[i].id+",";
+            }
+            id = id.substring(0,id.length-1);
+            $.ajax({
+                url:"/system/org/updateState",
+                type:"post",
+                data:{"idsStr":id,"useState":1},
+                success:function(data){
+                    if(data.code=="success"){
+                        $.messager.show({
+                            title:"消息",
+                            msg:data.msg,
+                            timeout:2000
+                        })
+                        $('#orgTreeGrid').treegrid('reload');
+                    }else{
+                        alert(data.msg);
+                    }
+                }
+            })
+        }else{
+            alert("请选择数据")
+        }
+    }
+
+</script>
+</html>

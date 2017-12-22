@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DictValueMapper">
+
+	<!-- 单个查询-->
+	<select id="selectOne" parameterType="String" resultType="DictValue">
+		SELECT
+		<include refid="fullSelect"/>
+		FROM SYS_DICT_VALUE DV
+		WHERE DV.ID = #{id,jdbcType=VARCHAR} AND DELETED = 0
+	</select>
+	<!-- 多个多条件查询-->
+	<select id="selectList" parameterType="DictValue" resultType="DictValue">
+		SELECT
+		<include refid="fullSelect"/>
+		FROM SYS_DICT_VALUE DV
+		WHERE DV.DELETED = 0
+		<include refid="fullCondition"/>
+		ORDER BY DV.UPDATE_TIME DESC
+	</select>
+	<!--列表查询 -->
+	<select id="selectListGrid" parameterType="DictValue" resultType="Map">
+		SELECT DT.TYPE_NAME AS "typeName",
+		DV.ID AS "id",DV.TYPE_ID AS "typeId",DV.DICT_NAME AS "dictName",DV.DICT_VAL AS "dictVal",DV.DESCRIPTION AS "description",
+		DV.USE_STATE AS "useState",
+		CASE WHEN DV.USE_STATE  = 0 THEN '启用'
+		WHEN DV.USE_STATE  = 1 THEN '停用'
+		END AS "useStateStr",
+		DV.ORDER_NUM AS "orderNum",DV.CREATE_TIME AS "createTime",DV.CREATE_BY AS "createBy",DV.UPDATE_TIME AS "updateTime",
+		DV.UPDATE_BY AS "updateBy",DV.DELETED AS "deleted",DV.VERSION AS "version"
+		FROM SYS_DICT_VALUE DV
+		LEFT JOIN SYS_DICT_TYPE DT ON DV.TYPE_ID = DT.ID
+		WHERE DV.DELETED = 0
+		<include refid="fullCondition"/>
+		ORDER BY DV.UPDATE_TIME DESC
+	</select>
+	<!--列表查询带分页 -->
+	<select id="selectListByType" parameterType="String" resultType="DictValue">
+		SELECT
+		<include refid="fullSelect"/>
+		FROM SYS_DICT_VALUE DV
+		LEFT JOIN SYS_DICT_TYPE DT ON DV.TYPE_ID = DT.ID
+		WHERE DV.DELETED = 0 AND DT.TYPE_VAL = #{type,jdbcType=VARCHAR}
+		ORDER BY DV.UPDATE_TIME DESC
+	</select>
+	<!-- 单体插入 -->
+	<insert id="save" parameterType="DictValue">
+		INSERT INTO SYS_DICT_VALUE
+		<include refid="fullSave"/>
+		VALUES (
+		#{id,jdbcType=VARCHAR},#{typeId,jdbcType=VARCHAR},#{dictName,jdbcType=VARCHAR},#{dictVal,jdbcType=VARCHAR},#{description,jdbcType=VARCHAR},
+		0,#{orderNum,jdbcType=INTEGER},SYSDATE,#{createBy,jdbcType=VARCHAR},SYSDATE,
+		#{updateBy,jdbcType=VARCHAR},0,0
+		)
+	</insert>
+	<!-- 单体更新 -->
+	<update id="update" parameterType="DictValue">
+		UPDATE SYS_DICT_VALUE SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		<include refid="fullUpdate"/>
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 单个启停 -->
+	<update id="updateState" parameterType="Map">
+		UPDATE SYS_DICT_VALUE SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		USE_STATE = #{useState,jdbcType=INTEGER},
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 批量启停 -->
+	<update id="batchUpdateState" parameterType="Map">
+		UPDATE SYS_DICT_VALUE SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		USE_STATE = #{useState,jdbcType=INTEGER},
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE DELETED = 0 AND ID in
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	<!-- ================================================================================================== -->
+	<sql id="fullSelect">
+		DV.ID AS "id",DV.TYPE_ID AS "typeId",DV.DICT_NAME AS "dictName",DV.DICT_VAL AS "dictVal",
+		DV.DESCRIPTION AS "description",DV.USE_STATE AS "userState",
+		DV.ORDER_NUM AS "orderNum",DV.CREATE_TIME AS "createTime",DV.CREATE_BY AS "createBy",DV.UPDATE_TIME AS "updateTime",
+		DV.UPDATE_BY AS "updateBy",DV.DELETED AS "deleted",DV.VERSION AS "version"
+	</sql>
+	<sql id="fullCondition">
+		<if test="id != null and id !=''">
+			AND DV.ID = #{id,jdbcType=VARCHAR}
+		</if>
+		<if test="typeId != null and typeId !=''">
+			AND DV.TYPE_ID = #{typeId,jdbcType=VARCHAR}
+		</if>
+		<if test="dictName != null and dictName !=''">
+			AND DV.DICT_NAME = #{dictName,jdbcType=VARCHAR}
+		</if>
+		<if test="dictVal != null and dictVal !=''">
+			AND DV.DICT_VAL = #{dictVal,jdbcType=VARCHAR}
+		</if>
+		<if test="description != null and description !=''">
+			AND DV.DESCRIPTION = #{description,jdbcType=VARCHAR}
+		</if>
+		<if test="useState != null and useState !=''">
+			AND DV.USE_STATE = #{useState,jdbcType=INTEGER}
+		</if>
+	</sql>
+	<sql id="fullSave">
+		(ID,TYPE_ID,DICT_NAME,DICT_VAL,DESCRIPTION,USE_STATE,
+		ORDER_NUM,CREATE_TIME,CREATE_BY,UPDATE_TIME,
+		UPDATE_BY,DELETED,VERSION)
+	</sql>
+	<sql id="fullUpdate">
+		<if test="typeId != null and typeId !=''">
+			TYPE_ID = #{typeId,jdbcType=VARCHAR},
+		</if>
+		<if test="dictName != null and dictName !=''">
+			DICT_NAME = #{dictName,jdbcType=VARCHAR},
+		</if>
+		<if test="dictVal != null and dictVal !=''">
+			DICT_VAL = #{dictVal,jdbcType=VARCHAR},
+		</if>
+		<if test="description != null and description !=''">
+			DESCRIPTION = #{description,jdbcType=VARCHAR},
+		</if>
+	</sql>
+</mapper>

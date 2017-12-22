@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="index/top::top">
+</head>
+<style type="text/css">
+	/* navbar */
+	.navbar-default {
+		font-size: 13px;
+	}
+		/* link */
+	.navbar-default .navbar-nav > li > a {
+		color: #777;
+	}
+	.navbar-default .navbar-nav > li > a:hover,
+	.navbar-default .navbar-nav > li > a:focus {
+		color: #333;
+	}
+	.navbar-default .navbar-nav > .active > a,
+	.navbar-default .navbar-nav > .active > a:hover,
+	.navbar-default .navbar-nav > .active > a:focus {
+		color: #0b6cbc;
+		font-weight: bold;
+		background-color: #f9f9f9;
+	}
+</style>
+<body class="easyui-layout">
+<!-- 页面顶部¨ -->
+<div th:replace="index/nav :: nav"></div>
+<!-- menu toggler -->
+
+<!-- 左侧菜单 -->
+<div th:replace="index/left :: left" ></div>
+	<div id="content" region="center" collapsible="false" style="padding:5px;">
+		<div id="moduleTab" class="easyui-tabs" fit="true" border="false" >
+
+		</div>
+	</div>
+		<!-- #main-content -->
+	<div region="south" collapsible="false" border="false" style="height: 30px;">
+		<div class="footer" style="text-align:center" th:text="${systemName}"></div>
+	</div>
+	<script type="text/javascript" src="/myfile/myjs/head.js"></script>
+
+</body>
+</html>

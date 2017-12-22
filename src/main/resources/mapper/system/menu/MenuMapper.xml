@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MenuMapper">
+	<!-- 根据用户ID获取菜单集合 -->
+	<select id="selectByUserId" parameterType="String" resultType="Menu">
+		SELECT M.ID AS "id",M.MENU_CODE AS "menuCode",M.MENU_NAME AS "menuName"
+		FROM SYS_MENU M
+		LEFT JOIN SYS_ROLE_MENU RM ON M.ID = RM.MENU_ID
+		LEFT JOIN SYS_ROLE_USER RU ON RU.ROLE_ID = RM.ROLE_ID
+		LEFT JOIN SYS_USER U ON RU.USER_ID = U.ID
+		WHERE M.DELETED = 0 AND U.ID = #{userId}
+		ORDER BY M.ORDER_NUM ASC
+	</select>
+	<!-- 单个查询-->
+	<select id="selectOne" parameterType="String" resultType="Menu">
+		SELECT
+		<include refid="fullSelect"/>
+		FROM SYS_MENU
+		WHERE ID = #{id,jdbcType=VARCHAR} AND DELETED = 0
+	</select>
+	<!--列表查询 -->
+	<select id="selectList" parameterType="Menu" resultType="Menu">
+		SELECT
+		<include refid="fullSelect"/>
+		FROM SYS_MENU
+		WHERE DELETED = 0
+		<include refid="fullCondition"/>
+		ORDER BY ORDER_NUM ASC
+	</select>
+	<select id="selectListGrid" parameterType="Menu" resultType="Map">
+		SELECT
+		ID AS "id",
+		MENU_CODE AS "menuCode",
+		MENU_NAME AS "menuName",
+		CASE WHEN MENU_TYPE = 'E' THEN '菜单'
+		WHEN MENU_TYPE = 'O' THEN '模块'
+		END AS "menuType",
+		PARENT_ID AS "parentId",
+		CASE WHEN PARENT_ID !='0' THEN PARENT_ID END AS "_parentId",
+		RESOURCE_URL AS "resourceUrl",
+		CASE WHEN MENU_TYPE = 'E' THEN 'open'
+		END AS "state",
+		ORDER_NUM AS "orderNum",
+		CREATE_TIME AS "createTime",CREATE_BY AS "createBy",UPDATE_TIME AS "updateTime",
+		UPDATE_BY AS "updateBy",DELETED AS "deleted",VERSION AS "version"
+		FROM SYS_MENU O
+		WHERE O.DELETED = 0
+		<include refid="fullCondition"/>
+		ORDER BY ORDER_NUM ASC
+	</select>
+	<select id="selectTree" resultType="Map">
+		SELECT
+		O.ID AS "id",
+		O.MENU_NAME AS "name",
+		O.PARENT_ID AS "pId",
+		O.MENU_TYPE AS "menuType",
+		CASE WHEN MENU_TYPE = 'E' THEN 'true'
+		END AS "open"
+		FROM SYS_MENU O
+		WHERE O.DELETED = 0
+		ORDER BY ORDER_NUM ASC
+	</select>
+	<select id="selectTreeByRoleId" resultType="Map">
+		SELECT
+		O.ID AS "id",
+		O.MENU_NAME AS "name",
+		O.PARENT_ID AS "pId",
+		O.MENU_TYPE AS "menuType",
+		CASE WHEN MENU_TYPE = 'E' THEN 'true'
+		END  AS "open",
+		CASE WHEN RM.ID IS NOT NULL THEN 'true'
+		END AS "checked"
+		FROM SYS_MENU O
+		LEFT JOIN SYS_ROLE_MENU RM ON O.ID = RM.MENU_ID AND RM.ROLE_ID = #{roleId,jdbcType=VARCHAR}
+		WHERE O.DELETED = 0
+		ORDER BY ORDER_NUM ASC
+	</select>
+	<!-- 单体插入 -->
+	<insert id="save" parameterType="Menu">
+		INSERT INTO SYS_MENU
+		<include refid="fullSave"/>
+		VALUES (
+		#{id,jdbcType=VARCHAR},#{menuCode,jdbcType=VARCHAR},#{menuName,jdbcType=VARCHAR},
+		#{menuType,jdbcType=VARCHAR},#{parentId,jdbcType=VARCHAR},
+		#{resourceUrl,jdbcType=VARCHAR},#{orderNum,jdbcType=INTEGER},SYSDATE,#{createBy,jdbcType=VARCHAR},SYSDATE,
+		#{updateBy,jdbcType=VARCHAR},0,0
+		)
+	</insert>
+	<!-- 单体更新 -->
+	<update id="update" parameterType="Menu">
+		UPDATE SYS_MENU SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		<include refid="fullUpdate"/>
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 单体删除 -->
+	<update id="delete" parameterType="Map">
+		UPDATE SYS_MENU SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		DELETED = 1,
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 批量删除 -->
+	<update id="batchDelete" parameterType="Map">
+		UPDATE SYS_MENU SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		DELETED = 1,
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE DELETED = 0 AND ID in
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	<!-- ================================================================================================== -->
+	<sql id="fullSelect">
+		ID AS "id",MENU_CODE AS "menuCode",MENU_NAME AS "menuName",MENU_TYPE AS "menuType",
+		PARENT_ID AS "parentId",RESOURCE_URL AS "resourceUrl",ORDER_NUM AS "orderNum",
+		CREATE_TIME AS "createTime",CREATE_BY AS "createBy",UPDATE_TIME AS "updateTime",
+		UPDATE_BY AS "updateBy",DELETED AS "deleted",VERSION AS "version"
+	</sql>
+	<sql id="fullCondition">
+		<if test="id != null and id !=''">
+			AND ID = #{id,jdbcType=VARCHAR}
+		</if>
+		<if test="menuCode != null and menuCode !=''">
+			AND MENU_CODE = #{menuCode,jdbcType=VARCHAR}
+		</if>
+		<if test="menuName != null and menuName !=''">
+			AND MENU_NAME = #{menuName,jdbcType=VARCHAR}
+		</if>
+		<if test="menuType != null and menuType !=''">
+			AND MENU_TYPE = #{menuType,jdbcType=VARCHAR}
+		</if>
+		<if test="parentId != null and parentId !=''">
+			AND PARENT_ID = #{parentId,jdbcType=VARCHAR}
+		</if>
+		<if test="resourceUrl != null and resourceUrl !=''">
+			AND RESOURCE_URL = #{resourceUrl,jdbcType=INTEGER}
+		</if>
+	</sql>
+	<sql id="fullSave">
+		(ID,MENU_CODE,MENU_NAME,MENU_TYPE,PARENT_ID,RESOURCE_URL,
+		ORDER_NUM,CREATE_TIME,CREATE_BY,UPDATE_TIME,
+		UPDATE_BY,DELETED,VERSION)
+	</sql>
+	<sql id="fullUpdate">
+		<if test="menuCode != null and menuCode !=''">
+			MENU_CODE = #{menuCode,jdbcType=VARCHAR},
+		</if>
+		<if test="menuName != null and menuName !=''">
+			MENU_NAME = #{menuName,jdbcType=VARCHAR},
+		</if>
+		<if test="menuType != null and menuType !=''">
+			MENU_TYPE = #{menuType,jdbcType=VARCHAR},
+		</if>
+		<if test="parentId != null and parentId !=''">
+			PARENT_ID = #{parentId,jdbcType=VARCHAR},
+		</if>
+		<if test="resourceUrl != null and resourceUrl !=''">
+			RESOURCE_URL = #{resourceUrl,jdbcType=INTEGER},
+		</if>
+		<if test="orderNum != null and orderNum !=''">
+			ORDER_NUM = #{orderNum,jdbcType=INTEGER},
+		</if>
+	</sql>
+</mapper>

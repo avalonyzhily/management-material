@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div>
+    <form id="pwdedit" class="window-form">
+        <input id="id" type="hidden" th:value="${user.id}">
+        <input id="userAccount" type="hidden" th:value="${user.userAccount}">
+        <table class="form-table">
+            <tr>
+                <td>原密码:</td><td><input id="oldPassword" required="true" type="password" class="easyui-textbox"/></td>
+            </tr>
+            <tr>
+                <td>新密码:</td><td><input id="newPassword" required="true" type="password" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>确认密码:</td><td><input id="newPassword1" required="true" type="password" class="easyui-textbox" value=""/></td>
+            </tr>
+        </table>
+        <div style="text-align: center" class="window-form-button">
+            <input type="button" class="easyui-linkbutton" value="保存" onclick="saveObj()"/>
+            <input type="button" class="easyui-linkbutton" value="取消" onclick="cancelWin()"/>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function saveObj() {
+        var flag = $("#pwdedit").form("validate");
+        if(!flag){
+            return;
+        }
+        var newPassword = $("#newPassword").textbox("getValue");
+        var newPassword1 = $("#newPassword1").textbox("getValue");
+        if(newPassword!=newPassword1){
+            alert("两次密码输入不一致！");
+            return;
+        }
+        var user = {};
+        var id = $("#id").val();
+        var userAccount = $("#userAccount").textbox("getValue");
+        var oldPassword = $("#oldPassword").textbox("getValue");
+        user.id = id;
+        user.userAccount = userAccount;
+        user.password = oldPassword;
+        user.newPassword = newPassword;
+        $.ajax({
+            url:"/system/user/updatePwd",
+            type:"post",
+            contentType:"application/json;charset=utf-8",
+            data:JSON.stringify(user),
+            success:function(data){
+                if(data.code=="success"){
+                    $.messager.show({
+                        title:"消息",
+                        msg:data.msg,
+                        timeout:2000
+                    })
+                    $("#dd").dialog("close");
+                    $('#userDatagrid').datagrid('load');
+                }else{
+                    alert(data.msg);
+                }
+            }
+        })
+    }
+    function cancelWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>

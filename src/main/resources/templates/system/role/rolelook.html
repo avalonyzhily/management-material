@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div>
+    <div class="easyui-tabs" style="width:100%;height:420px;">
+        <div title="角色信息">
+            <form id="rolelook"  class="window-form">
+                <input id="id" type="hidden" th:value="${role.id}">
+                <table style="height: 80%" class="form-table">
+                    <tr>
+                        <td>角色代码:</td><td><input readonly="true" id="roleCode" class="easyui-textbox" th:value="${role.roleCode}" /></td>
+                    </tr>
+                    <tr>
+                        <td>角色名称:</td><td><input readonly="true" id="roleName" class="easyui-textbox" th:value="${role.roleName}" /></td>
+                    </tr>
+                    <tr>
+                        <td>描述:</td><td><input readonly="true"  id="description" multiline="true" style="height: 100%"   class="easyui-textbox" th:value="${role.description}"/></td>
+                    </tr>
+                </table>
+
+            </form>
+        </div>
+        <div title="菜单权限">
+            <div class="easyui-layout" border="false" fit="true">
+                <div region="west" title="菜单" style="width: 40%">
+                    <div class="easyui-panel" style="padding:5px;height: 100%">
+                        <ul id="treeMenu" class="ztree"></ul>
+                    </div>
+                </div>
+                <div region="center" title="按钮">
+                    <table id="datagridButtonSelected" class="easyui-datagrid" idField="id" style="height: 100%;width: 100%"
+                           fitColumns="true" singleSelect="false">
+                        <thead>
+                        <tr>
+                            <th field="_check" checkbox="true" width="300"></th>
+                            <th field="buttonCode" width="300">按钮编码</th>
+                            <th field="buttonName" width="300">按钮名称</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div title="用户信息">
+            <div class="easyui-layout" border="false" fit="true">
+                <div region="west" title="可选用户" style="width: 40%">
+                    <table id="datagridUserSelect" class="easyui-datagrid" idField="id" style="height: 100%;width: 100%"
+                           th:attr="url=@{'/system/user/selectableListByRoleId?roleId='+${role.id}}"fitColumns="true" singleSelect="false">
+                        <thead>
+                        <tr>
+                            <th field="userAccount" width="300">用户账号</th>
+                            <th field="userName" width="300">用户姓名</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div region="center" style="width: 20%;padding-top: 80px;">
+                    <div style="margin: 0 auto;height: 15%;text-align: center">
+                        <a readonly="true"  onclick="" class="easyui-linkbutton" data-options="width:80"> &gt; </a>
+                    </div>
+                    <div style="margin: 0 auto;height: 15%;text-align: center">
+                        <a readonly="true" onclick="" class="easyui-linkbutton" data-options="width:80">&gt;&gt;</a>
+                    </div>
+                    <div style="margin: 0 auto;height: 15%;text-align: center">
+                        <a readonly="true" onclick="" class="easyui-linkbutton" data-options="width:80">&lt;</a>
+                    </div>
+                    <div style="margin: 0 auto;height: 15%;text-align: center">
+                        <a readonly="true"  onclick="" class="easyui-linkbutton" data-options="width:80">&lt;&lt;</a>
+                    </div>
+                </div>
+                <div region="east" title="已选用户" style="width: 40%">
+                    <table id="datagridUserSelected" class="easyui-datagrid" idField="id" style="height: 100%;width: 100%"
+                           th:attr="url=@{'/system/user/selectedListByRoleId?roleId='+${role.id}}"fitColumns="true" singleSelect="false">
+                        <thead>
+                        <tr>
+                            <th field="userAccount" width="300">用户账号</th>
+                            <th field="userName" width="300">用户姓名</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="text-align: center" class="window-form-button">
+        <input type="button" class="easyui-linkbutton" value="关闭" onclick="cancelRoleWin()"/>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function(){
+        var setting = {
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            },
+            check:{
+                checkStyle:"checkbox",
+                enable:true,
+
+            },
+            callback: {
+                beforeClick: beforeClick,
+                beforeCheck:beforeCheck,
+                onClick: onClick
+            }
+        };
+        $.ajax({
+            url : "/system/menu/selectTree",
+            type: "GET",
+            success : function (data) {
+                $.fn.zTree.init($("#treeMenu"), setting, data);
+            }
+        })
+    });
+    function beforeClick(treeId, treeNode, clickFlag) {
+        return (treeNode.click != false);
+    }
+    function beforeClick(treeId, treeNode, clickFlag) {
+        return false;
+    }
+    function onClick(event, treeId, treeNode, clickFlag) {
+        var id = $("#id").val();
+        $("#datagridButtonSelected").datagrid({
+            url:"/system/button/selectListByRoleId",
+            queryParams:{
+                menuId:treeNode.id,
+                roleId:id
+            }});
+    }
+    function cancelRoleWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>

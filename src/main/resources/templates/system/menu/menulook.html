@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div style="width:100%;height: 100%">
+    <form id="menulook" class="window-form">
+        <table class="form-table">
+            <input id="id" type="hidden" th:value="${menu.id}"/>
+            <tr>
+                <td>上级菜单:</td><td><input id="parentId" readonly="true" th:value="${menu.parentId}" editable="false"   class="easyui-combobox" url="/system/menu/selectListHasRoot" valueField="id" textField="menuName"/></td>
+            </tr>
+            <tr>
+                <td>菜单代码:</td><td><input id="menuCode" readonly="true" th:value="${menu.menuCode}"  class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>菜单名称:</td><td><input id="menuName" readonly="true" th:value="${menu.menuName}"   class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>资源路径:</td><td><input id="resourceUrl" readonly="true" th:value="${menu.resourceUrl}"  class="easyui-textbox" /></td>
+            </tr>
+            <tr>
+                <td>排序:</td><td><input id="orderNum" readonly="true" th:value="${menu.orderNum}"  class="easyui-numberbox" value=""/></td>
+            </tr>
+        </table>
+        <div style="text-align: center" class="window-form-button">
+            <input type="button" class="easyui-linkbutton" value="关闭" onclick="cancelWin()"/>
+        </div>
+    </form>
+
+</div>
+<script type="text/javascript">
+    function cancelWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>

@@ -1,0 +1,22 @@
+.window-form{
+    width: 100%;height: 85%;
+}
+.form-table{
+    width: 100%;height: 100%;
+}
+.form-table input{
+    width: 45%;
+}
+.form-table tr td:first-child{
+    width: 35%;
+    text-align: right;
+}
+.form-table tr td:nth-child(2){
+    width: 65%;
+    text-align: left;
+}
+.window-form-button .easyui-linkbutton{
+    width:80px;
+    height:30px;
+}
+

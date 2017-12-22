@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div style="width:100%;height: 100%">
+    <form id="menuedit" class="window-form">
+        <table class="form-table">
+            <input id="id" type="hidden" th:value="${menu.id}"/>
+            <tr>
+                <td>上级菜单:</td><td><input id="parentId" th:value="${menu.parentId}" required="true" editable="false" class="easyui-combobox" url="/system/menu/selectListHasRoot" valueField="id" textField="menuName"/></td>
+            </tr>
+            <tr>
+                <td>菜单代码:</td><td><input id="menuCode" th:value="${menu.menuCode}" required="true"  readonly="true"  class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>菜单名称:</td><td><input id="menuName" th:value="${menu.menuName}" required="true" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>资源路径:</td><td><input id="resourceUrl" th:value="${menu.resourceUrl}" required="true" class="easyui-textbox" /></td>
+            </tr>
+            <tr>
+                <td>排序:</td><td><input id="orderNum" th:value="${menu.orderNum}" required="true" class="easyui-numberbox" value=""/></td>
+            </tr>
+        </table>
+        <div style="text-align: center" class="window-form-button">
+            <input type="button" class="easyui-linkbutton" value="保存" onclick="updateMenu()"/>
+            <input type="button" class="easyui-linkbutton" value="取消" onclick="cancelMenuWin()"/>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function updateMenu() {
+        var flag = $("#menuedit").form("validate");
+        if(!flag){
+            return;
+        }
+        var menu = {};
+        var id = $("#id").val();
+        var parentId = $("#parentId").combobox("getValue");
+        var menuCode = $("#menuCode").textbox("getValue");
+        var menuName = $("#menuName").textbox("getValue");
+        var resourceUrl = $("#resourceUrl").textbox("getValue");
+        var orderNum = $("#orderNum").textbox("getValue");
+        menu.id = id;
+        menu.parentId = parentId;
+        menu.parentId = parentId;
+        menu.menuCode = menuCode;
+        menu.menuName = menuName;
+        menu.resourceUrl = resourceUrl;
+        menu.orderNum = orderNum;
+        $.ajax({
+            url:"/system/menu/save",
+            type:"post",
+            contentType:"application/json;charset=utf-8",
+            data:JSON.stringify(menu),
+            success:function(data){
+                if(data.code=="success"){
+                    $.messager.show({
+                        title:"消息",
+                        msg:data.msg,
+                        timeout:2000
+                    })
+                    $("#dd").dialog("close");
+                    $('#menuTreeGrid').treegrid('reload');
+                }else{
+                    alert(data.msg);
+                }
+            }
+        })
+    }
+    function cancelMenuWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>

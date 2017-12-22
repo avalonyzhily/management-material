@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div>
+<div class="easyui-tabs" style="width:100%;height:420px;">
+    <div title="角色信息">
+        <form id="roleedit"  class="window-form">
+            <input id="id" type="hidden" th:value="${role.id}">
+            <table style="height: 80%" class="form-table">
+                <tr>
+                    <td>角色代码:</td><td><input  id="roleCode" required="true" readonly="true" class="easyui-textbox" th:value="${role.roleCode}" /></td>
+                </tr>
+                <tr>
+                    <td>角色名称:</td><td><input  id="roleName" required="true" class="easyui-textbox" th:value="${role.roleName}" /></td>
+                </tr>
+                <tr>
+                    <td>描述:</td><td><input  id="description"  multiline="true" style="height: 100%"  class="easyui-textbox" th:value="${role.description}"/></td>
+                </tr>
+            </table>
+
+        </form>
+    </div>
+    <div title="菜单权限">
+        <div class="easyui-layout" border="false" fit="true">
+            <div region="west" title="菜单" style="width: 40%">
+                <div class="easyui-panel" style="padding:5px;height: 100%">
+                    <ul id="roleMenuTree" class="ztree"></ul>
+                </div>
+            </div>
+            <div region="center" title="按钮">
+                <table id="datagridButtonSelected"  class="easyui-datagrid" idField="id" style="height: 98%;width: 99%"
+                       fitColumns="true" singleSelect="false">
+                    <thead>
+                    <tr>
+                        <th field="_check" checkbox="true" width="300"></th>
+                        <th field="buttonCode" width="300">按钮编码</th>
+                        <th field="buttonName" width="300">按钮名称</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div title="用户信息">
+        <div class="easyui-layout" border="false" fit="true">
+            <div region="west" title="可选用户" style="width: 40%">
+                <table id="datagridUserSelect" class="easyui-datagrid" idField="id" style="height: 98%;width: 99%"
+                       th:attr="url=@{'/system/user/selectableListByRoleId?roleId='+${role.id}}"fitColumns="true" singleSelect="false">
+                    <thead>
+                    <tr>
+                        <th field="_check" checkbox="true" width="300"></th>
+                        <th field="userAccount" width="300">用户账号</th>
+                        <th field="userName" width="300">用户姓名</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+            <div region="center" style="width: 20%;padding-top: 80px;">
+                <div style="margin: 0 auto;height: 15%;text-align: center">
+                    <a  onclick="rightMove('datagridUserSelect','datagridUserSelected')" class="easyui-linkbutton" data-options="width:80"> &gt; </a>
+                </div>
+                <div style="margin: 0 auto;height: 15%;text-align: center">
+                    <a  onclick="allRightMove('datagridUserSelect','datagridUserSelected')" class="easyui-linkbutton" data-options="width:80">&gt;&gt;</a>
+                </div>
+                <div style="margin: 0 auto;height: 15%;text-align: center">
+                    <a  onclick="leftMove('datagridUserSelect','datagridUserSelected')" class="easyui-linkbutton" data-options="width:80">&lt;</a>
+                </div>
+                <div style="margin: 0 auto;height: 15%;text-align: center">
+                    <a  onclick="allLeftMove('datagridUserSelect','datagridUserSelected')" class="easyui-linkbutton" data-options="width:80">&lt;&lt;</a>
+                </div>
+            </div>
+            <div region="east" title="已选用户" style="width: 40%">
+                <table id="datagridUserSelected" class="easyui-datagrid" idField="id" style="height: 98%;width: 99%"
+                       th:attr="url=@{'/system/user/selectedListByRoleId?roleId='+${role.id}}"fitColumns="true" singleSelect="false">
+                    <thead>
+                    <tr>
+                        <th field="_check" checkbox="true" width="300"></th>
+                        <th field="userAccount" width="300">用户账号</th>
+                        <th field="userName" width="300">用户姓名</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+    <div style="text-align: center" class="window-form-button">
+        <input type="button" class="easyui-linkbutton" value="保存" onclick="updateRole()"/>
+        <input type="button" class="easyui-linkbutton" value="取消" onclick="cancelRoleWin()"/>
+    </div>
+</div>
+<script type="text/javascript">
+    var roleHasButton = {};
+    var isClickCheckLoad = {isClick:false,checkFlag:false};
+    $(document).ready(function(){
+        var setting = {
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            },
+            check:{
+                checkStyle:"checkbox",
+                enable:true,
+
+            },
+            callback: {
+                beforeClick: beforeClick,
+                onClick: onClick,
+                onCheck:onCheck
+            }
+        };
+        var id= $("#id").val();
+        $.ajax({
+            url : "/system/menu/selectTreeByRoleId?roleId="+id,
+            type: "GET",
+            success : function (data) {
+                $.fn.zTree.init($("#roleMenuTree"), setting, data);
+                $("#datagridButtonSelected").datagrid({
+                    onCheck : checkRow,
+                    onUncheck:unCheckRow,
+                    onLoadSuccess:onLoadSuccess,
+                    onCheckAll:onCheckAll,
+                    onUncheckAll:onUncheckAll
+                })
+            }
+        })
+        $.ajax({
+            url : "/system/button/selectListByRoleIdEdit?roleId="+id,
+            type: "GET",
+            success : function (data) {
+                if(data && data.length) {
+                    for(var i =0;i<data.length;i++){
+                        var id = data[i].id;
+                        roleHasButton[id] = id;
+                    }
+                }
+            }
+        })
+    });
+    function beforeClick(treeId, treeNode, clickFlag) {
+        return (treeNode.click != false);
+    }
+    function onClick(event, treeId, treeNode ) {
+        isClickCheckLoad.isClick = false;
+        isClickCheckLoad.checkFlag = treeNode.checked;
+        var id = $("#id").val();
+        $("#datagridButtonSelected").datagrid({
+            url:"/system/button/selectListByRoleId",
+            queryParams:{
+                menuId:treeNode.id,
+                roleId:id
+            }});
+    }
+    function onCheck(event, treeId, treeNode) {
+        isClickCheckLoad.isClick = true;
+        isClickCheckLoad.checkFlag = treeNode.checked;
+        var treeObj = $.fn.zTree.getZTreeObj("roleMenuTree");
+        treeObj.selectNode(treeNode);
+        $("#datagridButtonSelected").datagrid({
+            url:"/system/button/selectListGridNoPage",
+            queryParams:{
+                menuId:treeNode.id
+            }});
+    }
+    function checkRow(index,row) {
+        var id = row.id;
+        roleHasButton[id] = id;
+        var treeObj = $.fn.zTree.getZTreeObj("roleMenuTree");
+        var nodes = treeObj.getSelectedNodes();
+        if(nodes){
+            treeObj.checkNode(nodes[0],true,true);
+        }
+    }
+    function unCheckRow(index,row){
+        var id = row.id;
+        if(roleHasButton[id]){
+            roleHasButton[id] = null;
+        }
+    }
+    function onLoadSuccess(data) {
+        if(isClickCheckLoad.isClick){
+            if(isClickCheckLoad.checkFlag){
+                $("#datagridButtonSelected").datagrid("checkAll");
+            }else {
+                $("#datagridButtonSelected").datagrid("uncheckAll");
+            }
+        }
+//        if(data && data.rows){
+//            var rows = data.rows;
+//            for(var i=0;i<rows.length;i++){
+//                var row = rows[i];
+//                if(row.checked){
+//                    var index = $("#datagridButtonSelected").datagrid("getRowIndex",row);
+//                    $("#datagridButtonSelected").datagrid("checkRow",index);
+//                }
+//            }
+//        }
+    }
+    function onUncheckAll(rows) {
+        if(rows && rows.length>0){
+            for(var i = 0;i<rows.length;i++){
+                var id = rows[i].id;
+                roleHasButton[id] = null;
+            }
+        }
+//        var treeObj = $.fn.zTree.getZTreeObj("roleMenuTree");
+//        var nodes = treeObj.getSelectedNodes();
+//        if(nodes){
+//            treeObj.checkNode(nodes[0],false,true);
+//        }
+    }
+    function onCheckAll(rows) {
+        if(rows && rows.length>0){
+            for(var i = 0;i<rows.length;i++){
+                var id = rows[i].id;
+                roleHasButton[id] = id;
+            }
+        }
+        var treeObj = $.fn.zTree.getZTreeObj("roleMenuTree");
+        var nodes = treeObj.getSelectedNodes();
+        if(nodes){
+            treeObj.checkNode(nodes[0],true,true);
+        }
+    }
+    function updateRole() {
+        var flag = $("#roleedit").form("validate");
+        if(!flag){
+            return;
+        }
+        var role = {};
+        var id = $("#id").val();
+        var roleCode = $("#roleCode").textbox("getValue");
+        var roleName = $("#roleName").textbox("getValue");
+        var description = $("#description").textbox("getValue");
+        role.id = id;
+        role.roleCode = roleCode;
+        role.roleName = roleName;
+        role.description = description;
+        var requestRoleObj = {};
+        requestRoleObj.role = role;
+        var userSelectRows = $('#datagridUserSelected').datagrid("getRows");
+        if (userSelectRows.length > 0) {
+            var userNos = "";
+            for (var i = 0; i < userSelectRows.length; i++) {
+                userNos += userSelectRows[i].id + ",";
+            }
+            userNos = userNos.substr(0, userNos.length - 1);
+            requestRoleObj.userNos = userNos;
+        }
+        var treeObj = $.fn.zTree.getZTreeObj("roleMenuTree");
+        var nodes = treeObj.getCheckedNodes(true);
+        if (nodes.length > 0) {
+            var menuNos = "";
+            for (var i = 0; i < nodes.length; i++) {
+                menuNos += nodes[i].id + ",";
+            }
+            menuNos = menuNos.substr(0, menuNos.length - 1);
+            requestRoleObj.menuNos = menuNos;
+        }
+        if (roleHasButton) {
+            var buttonNos = "";
+            for (var k in roleHasButton) {
+                if(roleHasButton[k]){
+                    buttonNos +=  roleHasButton[k] + ",";
+                }
+            }
+            buttonNos = buttonNos.substr(0, buttonNos.length - 1);
+            requestRoleObj.buttonNos = buttonNos;
+        }
+        $.ajax({
+            url:"/system/role/save",
+            type:"post",
+            contentType:"application/json;charset=utf-8",
+            data:JSON.stringify(requestRoleObj),
+            success:function(data){
+                if(data.code=="success"){
+                    $.messager.show({
+                        title:"消息",
+                        msg:data.msg,
+                        timeout:2000
+                    })
+                    $("#dd").dialog("close");
+                    $('#roleDatagrid').datagrid('load');
+                }else{
+                    alert(data.msg);
+                }
+            }
+        })
+    }
+    function cancelRoleWin() {
+        $("#dd").dialog("close")
+    }
+    //右移
+    function rightMove(left, right) {
+        var leftDataGrid = $('#' + left);
+        var selectRows = leftDataGrid.datagrid("getChecked");
+        if (selectRows.length < 1) {
+            return;
+        }
+        var rightDataGrid = $('#' + right);
+        for (var i = 0; i < selectRows.length; i++) {
+            rightDataGrid.datagrid("insertRow", {
+                index : 0, // 索引从0开始
+                row : selectRows[i]
+            });
+        }
+        while(selectRows.length>0){
+            leftDataGrid.datagrid("deleteRow", leftDataGrid.datagrid("getRowIndex", selectRows[0]));
+        }
+    }
+
+    //全部右移
+    function allRightMove(left, right) {
+        var leftDataGrid = $('#' + left);
+        var selectRows = leftDataGrid.datagrid("getRows");
+        if (selectRows.length < 1) {
+            return;
+        }
+
+        var rightDataGrid = $('#' + right);
+        for (var i = 0; i < selectRows.length; i++) {
+            rightDataGrid.datagrid("insertRow", {
+                index : 0, // 索引从0开始
+                row : selectRows[i]
+            });
+        }
+        var rowCount = selectRows.length;
+        for (var j = 0; j < rowCount; j++) {
+            leftDataGrid.datagrid("deleteRow", 0);
+        }
+    }
+
+    //左移
+    function leftMove(left, right) {
+        var rightDataGrid = $('#' + right);
+        var selectRows = rightDataGrid.datagrid("getChecked");
+        if (selectRows.length < 1) {
+            return;
+        }
+        var leftDataGrid = $('#' + left);
+        for (var i = 0; i < selectRows.length; i++) {
+            leftDataGrid.datagrid("insertRow", {
+                index : 0, // 索引从0开始
+                row : selectRows[i]
+            });
+        }
+        while(selectRows.length>0){
+            rightDataGrid.datagrid("deleteRow", rightDataGrid.datagrid("getRowIndex", selectRows[0]));
+        }
+    }
+
+    //全部左移
+    function allLeftMove(left, right) {
+        var rightDataGrid = $('#' + right);
+        var selectRows = rightDataGrid.datagrid("getRows");
+        if (selectRows.length < 1) {
+            return;
+        }
+
+        var leftDataGrid = $('#' + left);
+        for (var i = 0; i < selectRows.length; i++) {
+            leftDataGrid.datagrid("insertRow", {
+                index : 0, // 索引从0开始
+                row : selectRows[i]
+            });
+        }
+
+        var rowCount = selectRows.length;
+        for (var i = 0; i < rowCount; i++) {
+            rightDataGrid.datagrid("deleteRow", 0);
+        }
+    }
+</script>
+</body>
+
+</html>

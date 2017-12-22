@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div style="width:100%;height: 100%">
+    <form id="buttonlook" class="window-form">
+        <input id="id" type="hidden" th:value="${button.id}"/>
+        <table class="form-table">
+            <tr>
+                <td>所属模块:</td><td><input id="menuId" readonly="true" th:value="${button.menuId}" editable="false"  class="easyui-combobox" url="/system/menu/selectList?menuType=O" valueField="id" textField="menuName"/></td>
+            </tr>
+            <tr>
+                <td>按钮编码:</td><td><input id="buttonCode" readonly="true" th:value="${button.buttonCode}" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>按钮名称:</td><td><input id="buttonName" readonly="true" th:value="${button.buttonName}" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>描述:</td><td><input id="description" readonly="true" multiline="true" style="height: 100%" th:value="${button.description}" class="easyui-textbox" value=""/></td>
+            </tr>
+        </table>
+        <div style="text-align: center" class="window-form-button">
+            <input type="button" class="easyui-linkbutton" value="关闭" onclick="cancelButtonWin()"/>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function cancelButtonWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>

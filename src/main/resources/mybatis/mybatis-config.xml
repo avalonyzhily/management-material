@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD SQL Map Config 3.0//EN"  
+	"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	
+	<settings> 
+  		<setting name="cacheEnabled" value="true" /><!-- 全局映射器启用缓存 -->
+        <setting name="useGeneratedKeys" value="true" /> 
+        <setting name="defaultExecutorType" value="REUSE" /> 
+        <!-- 开启驼峰命名转换配置 -->
+         <setting name="mapUnderscoreToCamelCase" value="true"/>
+    </settings>
+
+	<typeAliases>
+		<typeAlias type="com.diy.business.system.user.User" alias="User"/>
+		<typeAlias type="com.diy.business.system.role.Role" alias="Role"/>
+		<typeAlias type="com.diy.business.system.menu.Menu" alias="Menu"/>
+		<typeAlias type="com.diy.business.system.org.Org" alias="Org"/>
+		<typeAlias type="com.diy.business.system.button.Button" alias="Button"/>
+		<typeAlias type="com.diy.business.system.dict.DictType" alias="DictType"/>
+		<typeAlias type="com.diy.business.system.dict.DictValue" alias="DictValue"/>
+		<typeAlias type="com.diy.business.system.permission.RoleButton" alias="RoleButton"/>
+		<typeAlias type="com.diy.business.system.permission.RoleMenu" alias="RoleMenu"/>
+		<typeAlias type="com.diy.business.system.permission.RoleUser" alias="RoleUser"/>
+	</typeAliases>
+</configuration>

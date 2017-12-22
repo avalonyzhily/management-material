@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div style="width:100%;height: 100%">
+    <form id="orgedit" class="window-form" >
+        <table  class="form-table">
+            <input id="id" type="hidden" th:value="${org.id}"/>
+            <tr>
+                <td>上级组织:</td><td><input id="parentId" readonly="true" required="true" th:value="${org.parentId}" editable="false"  class="easyui-combobox" url="/system/org/selectListHasRoot?useState=0" valueField="id" textField="orgName"/></td>
+            </tr>
+            <tr>
+                <td>组织编号:</td><td><input id="orgCode" readonly="true" required="true"  th:value="${org.orgCode}" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>组织代码:</td><td><input id="orgNum" required="true" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>组织名称:</td><td><input id="orgName" required="true" th:value="${org.orgName}" editable="false" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>组织类型:</td>
+                <td><input id="orgType" required="true" readonly="true" th:value="${org.orgType}" class="easyui-combobox"
+                           url="/system/dictvalue/selectListByType?type=orgType" valueField="dictVal" textField="dictName"/>
+                </td>
+            </tr>
+            <tr>
+                <td>排序:</td><td><input id="orderNum" required="true" th:value="${org.orderNum}" class="easyui-numberbox" value=""/></td>
+            </tr>
+        </table>
+        <div style="text-align: center" class="window-form-button">
+            <input type="button" class="easyui-linkbutton" value="保存" onclick="updateOrg()"/>
+            <input type="button" class="easyui-linkbutton" value="取消" onclick="cancelOrgWin()"/>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function updateOrg() {
+		var flag = $("#orgedit").form("validate");
+        if(!flag){
+            return;
+        }
+        var org = {};
+        var id = $("#id").val();
+        var parentId = $("#parentId").combobox("getValue");
+        var orgCode = $("#orgCode").textbox("getValue");
+        var orgNum = $("#orgNum").textbox("getValue");
+        var orgName = $("#orgName").textbox("getValue");
+        var orgType = $("#orgType").combobox("getValue");
+        var orderNum = $("#orderNum").textbox("getValue");
+        org.id = id;
+        org.parentId = parentId;
+        org.orgCode = orgCode;
+        org.orgNum = orgNum;
+        org.orgName = orgName;
+        org.orgType = orgType;
+        org.orderNum = orderNum;
+        $.ajax({
+            url:"/system/org/save",
+            type:"post",
+            contentType:"application/json;charset=utf-8",
+            data:JSON.stringify(org),
+            success:function(data){
+                if(data.code=="success"){
+                    $.messager.show({
+                        title:"消息",
+                        msg:data.msg,
+                        timeout:2000
+                    })
+                    $("#dd").dialog("close");
+                    $('#orgTreeGrid').treegrid('reload');
+                }else{
+                    alert(data.msg);
+                }
+            }
+        })
+    }
+    function cancelOrgWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div style="width:100%;height: 100%">
+    <form id="dictTypeadd" class="window-form">
+        <table style="height: 80%" class="form-table">
+            <tr>
+                <td>类型键:</td><td><input id="typeVal" required="true" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>类型值:</td><td><input id="typeName" required="true" class="easyui-textbox" value=""/></td>
+            </tr>
+        </table>
+        <div style="text-align: center" class="window-form-button">
+            <input type="button" class="easyui-linkbutton" value="保存" onclick="saveDictType()"/>
+            <input type="button" class="easyui-linkbutton" value="取消" onclick="cancelDictTypeWin()"/>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function saveDictType() {
+        var flag = $("#dictTypeadd").form("validate");
+        if(!flag){
+            return;
+        }
+        var dictType = {};
+        var typeName = $("#typeName").textbox("getValue");
+        var typeVal = $("#typeVal").textbox("getValue");
+        dictType.typeName = typeName;
+        dictType.typeVal = typeVal;
+        $.ajax({
+            url:"/system/dicttype/save",
+            type:"post",
+            contentType:"application/json;charset=utf-8",
+            data:JSON.stringify(dictType),
+            success:function(data){
+                if(data.code=="success"){
+                    $.messager.show({
+                        title:"消息",
+                        msg:data.msg,
+                        timeout:2000
+                    })
+                    $("#dd").dialog("close");
+                    $('#datagridType').datagrid('load');
+                }else{
+                    alert(data.msg);
+                }
+            }
+        })
+    }
+    function cancelDictTypeWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>

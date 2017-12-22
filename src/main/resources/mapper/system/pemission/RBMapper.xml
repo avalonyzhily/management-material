@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RBMapper">
+	<!-- 单体插入 -->
+	<insert id="save" parameterType="RoleButton">
+		INSERT INTO SYS_ROLE_BUTTON
+		<include refid="fullSave"/>
+		VALUES (
+		#{id,jdbcType=VARCHAR},#{roleId,jdbcType=VARCHAR},#{buttonId,jdbcType=VARCHAR}
+		)
+	</insert>
+	<!-- 根据用户id删除 -->
+	<delete id="deleteByButton" parameterType="String">
+		DELETE FROM SYS_ROLE_BUTTON WHERE BUTTON_ID=#{id,jdbcType=VARCHAR}
+	</delete>
+	<!-- 批量删除 -->
+	<delete id="batchDeleteByButton" parameterType="List">
+		DELETE FROM SYS_ROLE_BUTTON WHERE BUTTON_ID in
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item,jdbcType=VARCHAR}
+		</foreach>
+	</delete>
+	<!-- 根据角色id删除 -->
+	<delete id="deleteByRole" parameterType="String">
+		DELETE FROM SYS_ROLE_BUTTON WHERE ROLE_ID=#{id,jdbcType=VARCHAR}
+	</delete>
+	<!-- 批量删除 -->
+	<delete id="batchDeleteByRole" parameterType="List">
+		DELETE FROM SYS_ROLE_BUTTON WHERE ROLE_ID in
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item,jdbcType=VARCHAR}
+		</foreach>
+	</delete>
+	<!-- ================================================================================================== -->
+	<sql id="fullSelect">
+		ID AS "id",ROLE_ID AS "roleId",BUTTON_ID AS "buttonId"
+	</sql>
+	<sql id="fullSave">
+		(ID,ROLE_ID,BUTTON_ID)
+	</sql>
+</mapper>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div>
+<div class="easyui-tabs" style="width:100%;height:420px;">
+    <div title="用户信息">
+        <form id="useradd" class="window-form">
+            <table  class="form-table">
+                <tr>
+                    <td>部门:</td><td><input id="deptId" class="easyui-combobox" required="true" editable="false" url="/system/org/selectListNoRoot?orgType=D&useState=0" valueField="id" textField="orgName"/></td>
+                </tr>
+                <tr>
+                    <td>用户名:</td><td><input id="userAccount" class="easyui-textbox" required="true" value=""/></td>
+                </tr>
+                <tr>
+                    <td>用户编号:</td><td><input id="userCode" class="easyui-textbox" required="true" value=""/></td>
+                </tr>
+                <tr>
+                    <td>密码:</td><td><input id="password" type="password" required="true" class="easyui-textbox" value=""/></td>
+                </tr>
+                <tr>
+                    <td>确认密码:</td><td><input id="password1" type="password" required="true" class="easyui-textbox" value=""/></td>
+                </tr>
+                <tr>
+                    <td>岗位:</td><td><input id="postId" class="easyui-combobox" required="true" editable="false" url="/system/org/selectListNoRoot?orgType=P&useState=0" valueField="id" textField="orgName"/></td>
+                </tr>
+                <tr>
+                    <td>姓名:</td><td><input id="userName" class="easyui-textbox"  required="true"  value=""/></td>
+                </tr>
+                <tr>
+                    <td>手机号:</td><td><input id="phone" class="easyui-textbox" value=""/></td>
+                </tr>
+                <tr>
+                    <td>邮箱:</td><td><input id="email" class="easyui-textbox" value=""/></td>
+                </tr>
+                <tr>
+                    <td>排序:</td><td><input id="orderNum" class="easyui-numberbox" required="true" value=""/></td>
+                </tr>
+            </table>
+
+        </form>
+    </div>
+    <div title="角色信息">
+        <div class="easyui-layout" border="false" fit="true" >
+            <div region="west" collapsible="false" title="可选角色" style="width: 40%">
+                <table id="datagridRoleSelect" class="easyui-datagrid" idField="id" style="width:100%; height:100%"
+                       url="/system/role/selectListGridNoPage" fit="true" singleSelect="false">
+                    <thead>
+                    <tr>
+                        <th field="_check" checkbox="true"  width="30"></th>
+                        <th field="roleCode" >角色代码</th>
+                        <th field="roleName" >角色名称</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+            <div region="center"  style="width: 20%;padding-top: 80px;">
+                <div style="margin: 0 auto;height: 15%;text-align: center">
+                    <a  onclick="rightMove('datagridRoleSelect','datagridRoleSelected')" class="easyui-linkbutton" data-options="width:80"> &gt; </a>
+                </div>
+                <div style="margin: 0 auto;height: 15%;text-align: center">
+                    <a  onclick="allRightMove('datagridRoleSelect','datagridRoleSelected')" class="easyui-linkbutton" data-options="width:80">&gt;&gt;</a>
+                </div>
+                <div style="margin: 0 auto;height: 15%;text-align: center">
+                    <a  onclick="leftMove('datagridRoleSelect','datagridRoleSelected')" class="easyui-linkbutton" data-options="width:80">&lt;</a>
+                </div>
+                <div style="margin: 0 auto;height: 15%;text-align: center">
+                    <a  onclick="allLeftMove('datagridRoleSelect','datagridRoleSelected')" class="easyui-linkbutton" data-options="width:80">&lt;&lt;</a>
+                </div>
+            </div>
+            <div region="east" collapsible="false"  title="已选角色" style="width: 40%">
+                <table id="datagridRoleSelected" class="easyui-datagrid" idField="id" style="width:100%; height:100%"
+                       fit="true" singleSelect="false">
+                    <thead>
+                    <tr>
+                        <th field="_check" checkbox="true" width="30"></th>
+                        <th field="roleCode">角色代码</th>
+                        <th field="roleName">角色名称</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+    <div style="text-align: center" class="window-form-button">
+        <input type="button" class="easyui-linkbutton" value="保存" onclick="saveUser()"/>
+        <input type="button" class="easyui-linkbutton" value="取消" onclick="cancelUserWin()"/>
+    </div>
+</div>
+<script type="text/javascript">
+    function saveUser() {
+        var flag = $("#useradd").form("validate");
+        if(!flag){
+            return;
+        }
+        var user = {};
+        var deptId = $("#deptId").combobox("getValue");
+        var userAccount = $("#userAccount").textbox("getValue");
+        var userCode = $("#userCode").textbox("getValue");
+        var password = $("#password").textbox("getValue");
+        var password1 = $("#password1").textbox("getValue");
+        var postId = $("#postId").combobox("getValue");
+        var userName = $("#userName").textbox("getValue");
+        var phone = $("#phone").textbox("getValue");
+        var email = $("#email").textbox("getValue");
+        var orderNum = $("#orderNum").textbox("getValue");
+        if(password!=password1){
+            alert("两次密码输入不一致！");
+            return;
+        }
+        user.deptId = deptId;
+        user.userAccount = userAccount;
+        user.userCode = userCode;
+        user.password = password;
+        user.postId = postId;
+        user.userName = userName;
+        user.phone = phone;
+        user.email = email;
+        user.orderNum = orderNum;
+        var requestUserObj = {}
+        requestUserObj.user = user;
+        var roleSelectRows = $('#datagridRoleSelected').datagrid("getRows");
+        if (roleSelectRows.length > 0) {
+            var roleNos = "";
+            for (var i = 0; i < roleSelectRows.length; i++) {
+                roleNos += roleSelectRows[i].id + ",";
+            }
+            roleNos = roleNos.substr(0, roleNos.length - 1);
+            requestUserObj.roleNos = roleNos;
+        }
+        $.ajax({
+            url:"/system/user/save",
+            type:"post",
+            contentType:"application/json;charset=utf-8",
+            data:JSON.stringify(requestUserObj),
+            success:function(data){
+                if(data.code=="success"){
+                    $.messager.show({
+                        title:"消息",
+                        msg:data.msg,
+                        timeout:2000
+                    })
+                    $("#dd").dialog("close");
+                    $('#userDatagrid').datagrid('load');
+                }else{
+                    alert(data.msg);
+                }
+            }
+        })
+    }
+    function cancelUserWin() {
+        $("#dd").dialog("close")
+    }
+    //右移
+    function rightMove(left, right) {
+        var leftDataGrid = $('#' + left);
+        var selectRows = leftDataGrid.datagrid("getChecked");
+        if (selectRows.length < 1) {
+            return;
+        }
+        var rightDataGrid = $('#' + right);
+        for (var i = 0; i < selectRows.length; i++) {
+            rightDataGrid.datagrid("insertRow", {
+                index : 0, // 索引从0开始
+                row : selectRows[i]
+            });
+        }
+        while(selectRows.length>0){
+            leftDataGrid.datagrid("deleteRow", leftDataGrid.datagrid("getRowIndex", selectRows[0]));
+        }
+    }
+
+    //全部右移
+    function allRightMove(left, right) {
+        var leftDataGrid = $('#' + left);
+        var selectRows = leftDataGrid.datagrid("getRows");
+        if (selectRows.length < 1) {
+            return;
+        }
+
+        var rightDataGrid = $('#' + right);
+        for (var i = 0; i < selectRows.length; i++) {
+            rightDataGrid.datagrid("insertRow", {
+                index : 0, // 索引从0开始
+                row : selectRows[i]
+            });
+        }
+        var rowCount = selectRows.length;
+        for (var j = 0; j < rowCount; j++) {
+            leftDataGrid.datagrid("deleteRow", 0);
+        }
+    }
+
+    //左移
+    function leftMove(left, right) {
+        var rightDataGrid = $('#' + right);
+        var selectRows = rightDataGrid.datagrid("getChecked");
+        if (selectRows.length < 1) {
+            return;
+        }
+        var leftDataGrid = $('#' + left);
+        for (var i = 0; i < selectRows.length; i++) {
+            leftDataGrid.datagrid("insertRow", {
+                index : 0, // 索引从0开始
+                row : selectRows[i]
+            });
+        }
+        while(selectRows.length>0){
+            rightDataGrid.datagrid("deleteRow", rightDataGrid.datagrid("getRowIndex", selectRows[0]));
+        }
+    }
+
+    //全部左移
+    function allLeftMove(left, right) {
+        var rightDataGrid = $('#' + right);
+        var selectRows = rightDataGrid.datagrid("getRows");
+        if (selectRows.length < 1) {
+            return;
+        }
+
+        var leftDataGrid = $('#' + left);
+        for (var i = 0; i < selectRows.length; i++) {
+            leftDataGrid.datagrid("insertRow", {
+                index : 0, // 索引从0开始
+                row : selectRows[i]
+            });
+        }
+
+        var rowCount = selectRows.length;
+        for (var i = 0; i < rowCount; i++) {
+            rightDataGrid.datagrid("deleteRow", 0);
+        }
+    }
+
+</script>
+</body>
+
+</html>

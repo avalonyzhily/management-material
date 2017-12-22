@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div style="width:100%;height: 100%">
+    <form id="dictValueedit" class="window-form">
+        <input id="id" type="hidden" th:value="${dictValue.id}"/>
+        <table class="form-table">
+            <tr>
+                <td>字典类型:</td><td><input id="typeId" th:value="${dictValue.typeId}" required="true" editable="false" class="easyui-combobox" url="/system/dicttype/selectList?useState=0" valueField="id" textField="typeName"/></td>
+            </tr>
+            <tr>
+                <td>字典键:</td><td><input id="dictVal" th:value="${dictValue.dictVal}" required="true" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>字典值:</td><td><input id="dictName" th:value="${dictValue.dictName}" required="true" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>描述:</td><td><input id="description" th:value="${dictValue.description}" multiline="true" style="height: 100%" class="easyui-textbox" value=""/></td>
+            </tr>
+        </table>
+        <div style="text-align: center" class="window-form-button">
+            <input type="button" class="easyui-linkbutton" value="保存" onclick="updateDictValue()"/>
+            <input type="button" class="easyui-linkbutton" value="取消" onclick="cancelDictValueWin()"/>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function updateDictValue() {
+        var flag = $("#dictValueedit").form("validate");
+        if(!flag){
+            return;
+        }
+        var dictValue = {};
+        var id = $("#id").val();
+        var typeId = $("#typeId").combobox("getValue");
+        var dictName = $("#dictName").textbox("getValue");
+        var dictVal = $("#dictVal").textbox("getValue");
+        var description = $("#description").textbox("getValue");
+        dictValue.id = id;
+        dictValue.typeId = typeId;
+        dictValue.dictName = dictName;
+        dictValue.dictVal = dictVal;
+        dictValue.description = description;
+        $.ajax({
+            url:"/system/dictvalue/save",
+            type:"post",
+            contentType:"application/json;charset=utf-8",
+            data:JSON.stringify(dictValue),
+            success:function(data){
+                if(data.code=="success"){
+                    $.messager.show({
+                        title:"消息",
+                        msg:data.msg,
+                        timeout:2000
+                    })
+                    $("#dd").dialog("close");
+                    $('#datagridValue').datagrid('load');
+                }else{
+                    alert(data.msg);
+                }
+            }
+        })
+    }
+    function cancelWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RoleMapper">
+
+	<!-- 根据用户ID获取角色集合 -->
+	<select id="selectByUserId" parameterType="String" resultType="Role">
+		SELECT R.ID AS "id",R.ROLE_CODE AS "roleCode",R.ROLE_NAME AS "roleName"
+		FROM SYS_ROLE R
+		LEFT JOIN SYS_ROLE_USER RU ON R.ID = RU.ROLE_ID
+		LEFT JOIN SYS_USER U ON RU.USER_ID = U.ID
+		WHERE R.DELETED = 0 AND U.ID = #{userId}
+	</select>
+	<!-- 单个查询-->
+	<select id="selectOne" parameterType="String" resultType="Role">
+		SELECT
+		<include refid="fullSelect"/>
+		FROM SYS_ROLE
+		WHERE ID = #{id,jdbcType=VARCHAR} AND DELETED = 0
+	</select>
+	<!-- 多个多条件查询-->
+	<select id="selectList" parameterType="Role" resultType="Role">
+		SELECT
+		<include refid="fullSelect"/>
+		FROM SYS_ROLE
+		WHERE DELETED = 0
+		<include refid="fullCondition"/>
+		ORDER BY UPDATE_TIME DESC
+	</select>
+	<!--列表查询 -->
+	<select id="selectListGrid" parameterType="Role" resultType="Map">
+		SELECT
+		<include refid="fullSelect"/>
+        FROM SYS_ROLE
+		WHERE DELETED = 0
+		<include refid="fullCondition"/>
+		ORDER BY UPDATE_TIME DESC
+	</select>
+	<select id="selectableListByUserId" parameterType="String" resultType="Map">
+		SELECT
+		R.ID AS "id",R.ROLE_CODE AS "roleCode",R.ROLE_NAME AS "roleName"
+		FROM SYS_ROLE R
+		WHERE R.DELETED =0 AND  R.ID NOT IN (SELECT
+				R1.ID
+				FROM SYS_ROLE R1
+				LEFT JOIN SYS_ROLE_USER RU ON R1.ID = RU.ROLE_ID
+				WHERE R1.DELETED = 0 AND RU.USER_ID = #{userId,jdbcType=VARCHAR}
+				)
+		ORDER BY R.UPDATE_TIME DESC
+	</select>
+	<select id="selectedListByUserId" parameterType="String" resultType="Map">
+		SELECT
+		R.ID AS "id",R.ROLE_CODE AS "roleCode",R.ROLE_NAME AS "roleName"
+		FROM SYS_ROLE R
+		LEFT JOIN SYS_ROLE_USER RU ON R.ID = RU.ROLE_ID
+		WHERE R.DELETED = 0 AND RU.USER_ID = #{userId,jdbcType=VARCHAR}
+		ORDER BY R.UPDATE_TIME DESC
+	</select>
+	<!-- 单体插入 -->
+	<insert id="save" parameterType="Role">
+		INSERT INTO SYS_ROLE
+		<include refid="fullSave"/>
+		VALUES (
+		#{id,jdbcType=VARCHAR},#{roleCode,jdbcType=VARCHAR},#{roleName,jdbcType=VARCHAR},#{description,jdbcType=VARCHAR},
+		SYSDATE,#{createBy,jdbcType=VARCHAR},SYSDATE,
+		#{updateBy,jdbcType=VARCHAR},0,0
+		)
+	</insert>
+	<!-- 单体更新 -->
+	<update id="update" parameterType="Role">
+		UPDATE SYS_ROLE SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		<include refid="fullUpdate"/>
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 单体删除 -->
+	<update id="delete" parameterType="Map">
+		UPDATE SYS_ROLE SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		DELETED = 1,
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE ID=#{id,jdbcType=VARCHAR} AND DELETED = 0
+	</update>
+	<!-- 批量删除 -->
+	<update id="batchDelete" parameterType="Map">
+		UPDATE SYS_ROLE SET
+		UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+		DELETED = 1,
+		UPDATE_TIME = SYSDATE,
+		VERSION = VERSION+1
+		WHERE DELETED = 0 AND ID in
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	<!-- ================================================================================================== -->
+	<sql id="fullSelect">
+		ID AS "id",ROLE_CODE AS "roleCode",ROLE_NAME AS "roleName",DESCRIPTION AS "description",
+		CREATE_TIME AS "createTime",CREATE_BY AS "createBy",UPDATE_TIME AS "updateTime",
+		UPDATE_BY AS "updateBy",DELETED AS "deleted",VERSION AS "version"
+	</sql>
+	<sql id="fullCondition">
+		<if test="id != null and id !=''">
+			AND ID = #{id,jdbcType=VARCHAR}
+		</if>
+		<if test="roleCode != null and roleCode !=''">
+			AND ROLE_CODE = #{roleCode,jdbcType=VARCHAR}
+		</if>
+		<if test="roleName != null and roleName !=''">
+			AND ROLE_NAME = #{roleName,jdbcType=VARCHAR}
+		</if>
+		<if test="description != null and description !=''">
+			AND DESCRIPTION = #{description,jdbcType=VARCHAR}
+		</if>
+	</sql>
+	<sql id="fullSave">
+		(ID,ROLE_CODE,ROLE_NAME,DESCRIPTION,CREATE_TIME,CREATE_BY,UPDATE_TIME,
+		UPDATE_BY,DELETED,VERSION)
+	</sql>
+	<sql id="fullUpdate">
+		<if test="roleCode != null and roleCode !=''">
+			ROLE_CODE = #{roleCode,jdbcType=VARCHAR},
+		</if>
+		<if test="roleName != null and roleName !=''">
+			ROLE_NAME = #{roleName,jdbcType=VARCHAR},
+		</if>
+		<if test="description != null and description !=''">
+			DESCRIPTION = #{description,jdbcType=VARCHAR},
+		</if>
+	</sql>
+</mapper>

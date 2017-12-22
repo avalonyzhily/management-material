@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div style="width:100%;height: 100%">
+    <form id="orgadd" class="window-form">
+        <table class="form-table">
+            <tr>
+                <td>上级组织:</td><td><input id="parentId" required="true" editable="false" class="easyui-combobox" url="/system/org/selectListHasRoot?useState=0" valueField="id" textField="orgName"/></td>
+            </tr>
+            <tr>
+                <td>组织编号:</td><td><input id="orgCode" readonly="true" required="true" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>组织代码:</td><td><input id="orgNum" required="true" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>组织名称:</td><td><input id="orgName" required="true" class="easyui-textbox" value=""/></td>
+            </tr>
+            <tr>
+                <td>组织类型:</td>
+                <td><input id="orgType" required="true" readonly="true" class="easyui-combobox" editable="false"
+                           url="/system/dictvalue/selectListByType?type=orgType" valueField="dictVal" textField="dictName"/>
+                </td>
+            </tr>
+            <tr>
+                <td>排序:</td><td><input id="orderNum" required="true" class="easyui-numberbox" value=""/></td>
+            </tr>
+        </table>
+        <div style="text-align: center" class="window-form-button">
+            <input type="button" class="easyui-linkbutton" value="保存" onclick="saveOrg()"/>
+            <input type="button" class="easyui-linkbutton" value="取消" onclick="cancelOrgWin()"/>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    $(document).ready(function(){
+        $("#parentId").combobox({
+            onChange:changeParent
+        })
+    });
+    function saveOrg() {
+		var flag = $("#orgadd").form("validate");
+        if(!flag){
+            return;
+        }
+        var org = {};
+        var parentId = $("#parentId").combobox("getValue");
+        var orgCode = $("#orgCode").textbox("getValue");
+        var orgNum = $("#orgNum").textbox("getValue");
+        var orgName = $("#orgName").textbox("getValue");
+        var orgType = $("#orgType").combobox("getValue");
+        var orderNum = $("#orderNum").textbox("getValue");
+        org.parentId = parentId;
+        org.orgCode = orgCode;
+        org.orgNum = orgNum;
+        org.orgName = orgName;
+        org.orgType = orgType;
+        org.orderNum = orderNum;
+        $.ajax({
+            url:"/system/org/save",
+            type:"post",
+            contentType:"application/json;charset=utf-8",
+            data:JSON.stringify(org),
+            success:function(data){
+                if(data.code=="success"){
+                    $.messager.show({
+                        title:"消息",
+                        msg:data.msg,
+                        timeout:2000
+                    })
+                    $("#dd").dialog("close");
+                    $('#orgTreeGrid').treegrid('reload');
+                }else{
+                    alert(data.msg);
+                }
+            }
+        })
+    }
+    function changeParent(newValue, oldValue) {
+        $.ajax({
+            url:"/system/org/getOrgCodeByParent?parentId="+newValue,
+            type:"GET",
+            success:function(data){
+                if(data.code=="success"){
+                    $("#orgCode").textbox("setValue",data.msg);
+                    var orgType = data.obj;
+                    if(orgType=="0"){
+                        $("#orgType").combobox("setValue","C");
+                    }else if(orgType=="C"){
+                        $("#orgType").combobox("setValue","D");
+                    }else if(orgType=="D"){
+                        $("#orgType").combobox("setValue","P");
+                    }else{
+                        $("#orgType").combobox("setValue","P");
+                    }
+                }
+            }
+        })
+    }
+    function cancelOrgWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>

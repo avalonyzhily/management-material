@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/bootstrap/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="/myfile/mycss/table.css">
+    <script type="text/javascript" src="/easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="/easyui/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/easyui/locale/easyui-lang-zh_CN.js"></script>
+    <link rel="stylesheet" href="/zTree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+    <script type="text/javascript" src="/zTree/js/jquery.ztree.core.js"></script>
+    <script type="text/javascript" src="/zTree/js/jquery.ztree.excheck.js"></script>
+    <script type="text/javascript" src="/zTree/js/jquery.ztree.exedit.js"></script>
+
+</head>
+<body>
+<div class="easyui-layout" border="false" fit="true">
+    <div id="dataTree" region="west" border="false" style="width: 250px;height: 100%" >
+        <div class="easyui-panel" style="padding:5px;height: 100%">
+            <ul id="treeOrg" class="ztree"></ul>
+        </div>
+    </div>
+    <div id="dataTable" border="false" region="center" style="height: 100%">
+        <table id="userDatagrid" class="easyui-datagrid" style="height: 100%;width: 100%"
+               data-options="
+               url:'/system/user/selectListGridHasPage',
+               idField:'id',
+               singleSelect:false,
+               toolbar:'#toolbars',
+               pagination:true,pageNumber:1,
+               rowStyler:rowStyle"
+               th:attrappend="pageSize=${allDict.pageSetting.pageSize},pageList='['+${allDict.pageSetting.pageList}+']'">
+            <thead>
+            <tr>
+                <th field="_check" checkbox="true"></th>
+                <th field="userCode" align="center"  width="100">用户编号</th>
+                <th field="userAccount" formatter="formatLook" align="center" width="120">用户名</th>
+                <th field="userName" align="center" width="100">姓名</th>
+                <th field="deptName" align="center" width="180">部门</th>
+                <th field="postName" align="center" width="180">岗位</th>
+                <th field="email" align="center" width="150">邮箱</th>
+                <th field="phone" align="center" width="150">手机</th>
+                <th field="orderNum" align="center" width="80">排序</th>
+                <th field="useStateStr" align="center" width="80">状态</th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+    <div id="toolbars">
+        <a id="add" th:if="${s.isPermitted('user_add') or userAccount == 'admin'} " onclick="openAdd()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-add'">添加</a>
+        <a id="edit" th:if="${s.isPermitted('user_edit') or userAccount == 'admin'} " onclick="edit()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-edit'">编辑</a>
+        <a id="del" th:if="${s.isPermitted('user_del') or userAccount == 'admin'} " onclick="delSelected()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-no'">删除</a>
+        <a id="pwdedit" th:if="${s.isPermitted('user_pwd') or userAccount == 'admin'} " onclick="pwdedit()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-edit'">修改密码</a>
+        <a id="use" th:if="${s.isPermitted('user_use') or userAccount == 'admin'} " onclick="useSelected()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-ok'">启用</a>
+        <a id="unuse" th:if="${s.isPermitted('user_unuse') or userAccount == 'admin'} " onclick="unuseSelected()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-lock'">停用</a>
+    </div>
+</div>
+<div id="dd" class="easyui-window"></div>
+</body>
+<script type="text/javascript">
+    $(function() {
+        $('#dd').window('close');
+    });
+    $(document).ready(function(){
+        var setting = {
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            },
+            callback: {
+                beforeClick: beforeClick,
+                onClick: onClick
+            }
+        };
+        $.ajax({
+            url : "/system/org/selectTree",
+            type: "GET",
+            success : function (data) {
+                $.fn.zTree.init($("#treeOrg"), setting, data);
+            }
+        })
+    });
+    function beforeClick(treeId, treeNode, clickFlag) {
+        return (treeNode.click != false);
+    }
+    function onClick(event, treeId, treeNode, clickFlag) {
+        $("#userDatagrid").datagrid("load",{orgCode:treeNode.orgCode});
+    }
+    function rowStyle(index,row) {
+        if(row.useState==0){
+            return 'color:blue;';
+        }else {
+            return 'color:red;';
+        }
+    }
+    function formatLook(value,row,index){
+        return '<a onclick="look(\''+row.id+'\')">'+value+'</a>';
+    }
+    function openAdd() {
+        $('#dd').window({
+            title: '新增用户',
+            width: 600,
+            height: 500,
+            left:"100px",
+            top:"0px",
+            collapsible:false,
+            minimizable:false,
+            maximizable:false,
+            closed: false,
+            cache: false,
+            href: '/system/user/add',
+            modal: true
+        });
+    }
+    function edit() {
+        var row = $("#userDatagrid").datagrid("getSelected");
+        if(row){
+            $('#dd').window({
+                title: '编辑用户',
+                width: 600,
+                height: 500,
+                left:"100px",
+                top:"0px",
+                collapsible:false,
+                minimizable:false,
+                maximizable:false,
+                closed: false,
+                cache: false,
+                href: '/system/user/edit?id='+row.id,
+                modal: true
+            });
+        }else{
+            alert("请选择一行记录");
+        }
+    }
+    function look(id) {
+        $('#dd').window({
+            title: '查看用户',
+            width: 600,
+            height: 500,
+            left:"100px",
+            top:"0px",
+            collapsible:false,
+            minimizable:false,
+            maximizable:false,
+            closed: false,
+            cache: false,
+            href: '/system/user/look?id='+id,
+            modal: true
+        });
+
+    }
+    function delSelected() {
+        var rows = $('#userDatagrid').datagrid('getSelections')
+        var id = "";
+        if(rows && rows.length>0){
+            for(var i = 0;i<rows.length;i++){
+                id +=rows[i].id+",";
+            }
+            id = id.substring(0,id.length-1);
+            $.ajax({
+                url:"/system/user/delete",
+                type:"post",
+                data:{"idsStr":id},
+                success:function(data){
+                    if(data.code=="success"){
+                        $.messager.show({
+                            title:"消息",
+                            msg:data.msg,
+                            timeout:2000
+                        })
+                        $('#userDatagrid').datagrid('load');
+                    }else{
+                        alert(data.msg);
+                    }
+                }
+            })
+        }else{
+            alert("请选择数据");
+        }
+    }
+    function pwdedit() {
+        var row = $('#userDatagrid').datagrid('getSelected')
+        if(row){
+            $('#dd').window({
+                title: '修改密码',
+                width: 400,
+                height: 150,
+                left:"100px",
+                top:"0px",
+                collapsible:false,
+                minimizable:false,
+                maximizable:false,
+                closed: false,
+                cache: false,
+                href: '/system/user/pwdedit?id='+row.id,
+                modal: true
+            });
+        }else{
+            alert("请选择数据");
+        }
+    }
+    function useSelected() {
+        var rows = $('#userDatagrid').datagrid('getSelections')
+        var id = "";
+        if(rows && rows.length>0){
+            for(var i = 0;i<rows.length;i++){
+                id +=rows[i].id+",";
+            }
+            id = id.substring(0,id.length-1);
+            $.ajax({
+                url:"/system/user/updateState",
+                type:"post",
+                data:{"idsStr":id,"useState":0},
+                success:function(data){
+                    if(data.code=="success"){
+                        $.messager.show({
+                            title:"消息",
+                            msg:data.msg,
+                            timeout:2000
+                        })
+                        $('#userDatagrid').datagrid('reload');
+                    }else{
+                        alert(data.msg);
+                    }
+                }
+            })
+        }else{
+            alert("请选择数据")
+        }
+    }
+    function unuseSelected() {
+        var rows = $('#userDatagrid').datagrid('getSelections')
+        var id = "";
+        if(rows && rows.length>0){
+            for(var i = 0;i<rows.length;i++){
+                id +=rows[i].id+",";
+            }
+            id = id.substring(0,id.length-1);
+            $.ajax({
+                url:"/system/user/updateState",
+                type:"post",
+                data:{"idsStr":id,"useState":1},
+                success:function(data){
+                    if(data.code=="success"){
+                        $.messager.show({
+                            title:"消息",
+                            msg:data.msg,
+                            timeout:2000
+                        })
+                        $('#userDatagrid').datagrid('reload');
+                    }else{
+                        alert(data.msg);
+                    }
+                }
+            })
+        }else{
+            alert("请选择数据")
+        }
+    }
+</script>
+</html>

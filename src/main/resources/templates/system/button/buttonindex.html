@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/bootstrap/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="/myfile/mycss/table.css">
+    <script type="text/javascript" src="/easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="/easyui/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/easyui/locale/easyui-lang-zh_CN.js"></script>
+    <link rel="stylesheet" href="/zTree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+    <script type="text/javascript" src="/zTree/js/jquery.ztree.core.js"></script>
+    <script type="text/javascript" src="/zTree/js/jquery.ztree.excheck.js"></script>
+    <script type="text/javascript" src="/zTree/js/jquery.ztree.exedit.js"></script>
+</head>
+<body>
+<div class="easyui-layout" fit="true">
+    <div id="dataTree" region="west" border="false" style="width: 250px;height: 100%" >
+        <div class="easyui-panel" style="padding:5px;height: 100%">
+            <ul id="treeMenu" class="ztree"></ul>
+        </div>
+    </div>
+    <div id="dataTable" region="center" border="false" style="height: 100%">
+        <table id="buttonDatagrid" class="easyui-datagrid" style="width:100%;height: 100%"
+               data-options="
+               url:'/system/button/selectListGridHasPage',
+               idField:'id',
+               singleSelect:false,
+               toolbar:'#toolbars',
+               pagination:true,pageNumber:1"
+               th:attrappend="pageSize=${allDict.pageSetting.pageSize},pageList='['+${allDict.pageSetting.pageList}+']'">
+            <thead>
+            <tr>
+                <th field="_check" checkbox="true"></th>
+                <th field="buttonCode" formatter="formatLook" width="100">按钮编码</th>
+                <th field="buttonName" width="100">按钮名称</th>
+                <th field="menuName" width="100">所属模块</th>
+                <th field="description" width="300">描述</th>
+
+            </tr>
+            </thead>
+        </table>
+    </div>
+    <div id="toolbars">
+        <a id="add" th:if="${s.isPermitted('button_add') or userAccount == 'admin'} " onclick="openAdd()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-add'">添加</a>
+        <a id="edit" th:if="${s.isPermitted('button_edit') or userAccount == 'admin'}" onclick="edit()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-edit'">编辑</a>
+        <a id="del" th:if="${s.isPermitted('button_del') or userAccount == 'admin'}" onclick="delSelected()" class="easyui-linkbutton" data-options="width:80,iconCls:'icon-no'">删除</a>
+    </div>
+</div>
+<div id="dd" class="easyui-window"></div>
+</body>
+<script type="text/javascript">
+    $(function() {
+        $('#dd').window('close');
+    });
+    $(document).ready(function(){
+        var setting = {
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            },
+            callback: {
+                beforeClick: beforeClick,
+                onClick: onClick
+            }
+        };
+        $.ajax({
+            url : "/system/menu/selectTree",
+            type: "GET",
+            success : function (data) {
+                $.fn.zTree.init($("#treeMenu"), setting, data);
+            }
+        })
+    });
+    function beforeClick(treeId, treeNode, clickFlag) {
+        return (treeNode.click != false);
+    }
+    function onClick(event, treeId, treeNode, clickFlag) {
+        $("#buttonDatagrid").datagrid("load",{menuId:treeNode.id});
+    }
+    function formatLook(value,row){
+        return '<a onclick="look(\''+row.id+'\')">'+value+'</a>';
+    }
+    function openAdd() {
+        $('#dd').window({
+            title: '新增按钮',
+            width: 500,
+            height: 300,
+            left:"100px",
+            top:"0px",
+            collapsible:false,
+            minimizable:false,
+            maximizable:false,
+            closed: false,
+            cache: false,
+            href: '/system/button/add',
+            modal: true
+        });
+    }
+    function edit() {
+        var row = $("#buttonDatagrid").datagrid("getSelected");
+        if(row){
+            $('#dd').window({
+                title: '编辑菜单',
+                width: 500,
+                height: 300,
+                left:"100px",
+                top:"0px",
+                collapsible:false,
+                minimizable:false,
+                maximizable:false,
+                closed: false,
+                cache: false,
+                href: '/system/button/edit?id='+row.id,
+                modal: true
+            });
+        }else{
+            alert("请选择一行记录");
+        }
+    }
+    function look(id) {
+        $('#dd').window({
+            title: '查看菜单',
+            width: 500,
+            height: 300,
+            left:"100px",
+            top:"0px",
+            collapsible:false,
+            minimizable:false,
+            maximizable:false,
+            closed: false,
+            cache: false,
+            href: '/system/button/look?id='+id,
+            modal: true
+        });
+    }
+    function delSelected() {
+        var rows = $('#buttonDatagrid').datagrid('getSelections')
+        var id = "";
+        if(rows && rows.length>0){
+            for(var i = 0;i<rows.length;i++){
+                id +=rows[i].id+",";
+            }
+            id = id.substring(0,id.length-1);
+            $.ajax({
+                url:"/system/button/delete",
+                type:"post",
+                data:{"idsStr":id},
+                success:function(data){
+                    if(data.code=="success"){
+                        $.messager.show({
+                            title:"消息",
+                            msg:data.msg,
+                            timeout:2000
+                        })
+                        $('#buttonDatagrid').datagrid('load');
+                    }else{
+                        alert(data.msg);
+                    }
+                }
+            })
+        }else{
+            alert("请选择数据");
+        }
+    }
+</script>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body >
+<div region="north" collapsible="false"  th:fragment="nav">
+    <div class="navbar navbar-default">
+        <div class="navbar-inner">
+            <a class="brand"><small th:text="${systemName}"><i class="icon-leaf"></i></small> </a>
+            <ul class="nav pull-right">
+                <li><a href="javascript:void(0)">欢迎你,<span th:text="${userName}"></span></a></li>
+                <li><a href="/login/logout"><i class="icon-off"></i>退出</a></li>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <nav  id="navigate" class="navbar navbar-default" role="navigation"
+          style="margin-bottom: 0px">
+        <div class="container-fluid">
+            <ul class="nav navbar-nav">
+                <li style="cursor: pointer;" th:id="${menu.id}" th:class="${defaultModule==menu.menuCode}?'active':''" th:each="menu : ${navList}">
+                    <a  th:onclick="'javascript:changeModule(\''+${menu.id}+'\',\''+${menu.menuName}+'\',\'/'+${menu.resourceUrl}+'\')'"  th:text="${menu.menuName}"></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</div>
+</body>
+</html>

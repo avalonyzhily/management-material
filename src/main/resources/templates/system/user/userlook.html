@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div>
+    <div class="easyui-tabs" style="width:100%;height:420px;">
+        <div title="用户信息">
+            <form id="userlook" class="window-form">
+                <input id="id" type="hidden" th:value="${user.id}"/>
+                <table  class="form-table">
+                    <tr>
+                        <td>部门:</td><td><input id="deptId" readonly="true" th:value="${user.deptId}" class="easyui-combobox" url="/system/org/selectListNoRoot?orgType=D&useState=0" valueField="id" textField="orgName"/></td>
+                    </tr>
+                    <tr>
+                        <td>用户名:</td><td><input id="userAccount" readonly="true" th:value="${user.userAccount}" class="easyui-textbox" value=""/></td>
+                    </tr>
+                    <tr>
+                        <td>用户编号:</td><td><input id="userCode" readonly="true" th:value="${user.userCode}" class="easyui-textbox" value=""/></td>
+                    </tr>
+                    <tr>
+                        <td>岗位:</td><td><input id="postId" readonly="true" th:value="${user.postId}" class="easyui-combobox" url="/system/org/selectListNoRoot?orgType=P&useState=0" valueField="id" textField="orgName"/></td>
+                    </tr>
+                    <tr>
+                        <td>姓名:</td><td><input id="userName" readonly="true" th:value="${user.userName}" class="easyui-textbox"   value=""/></td>
+                    </tr>
+                    <tr>
+                        <td>手机号:</td><td><input id="phone" readonly="true" th:value="${user.phone}" class="easyui-textbox" value=""/></td>
+                    </tr>
+                    <tr>
+                        <td>邮箱:</td><td><input id="email" readonly="true" th:value="${user.email}" class="easyui-textbox" value=""/></td>
+                    </tr>
+                    <tr>
+                        <td>排序:</td><td><input id="orderNum" readonly="true" th:value="${user.orderNum}" class="easyui-numberbox" value=""/></td>
+                    </tr>
+                </table>
+
+            </form>
+        </div>
+        <div title="角色信息">
+            <div class="easyui-layout" border="false" fit="true" >
+                <div region="west" collapsible="false" title="可选角色" style="width: 40%">
+                    <table id="datagridRoleSelect" class="easyui-datagrid" idField="id" style="width:100%; height:100%"
+                           th:attr="url=@{'/system/role/selectableListByUserId?userId='+${user.id}}" fit="true" singleSelect="false">
+                        <thead>
+                        <tr>
+                            <th field="roleCode" >角色代码</th>
+                            <th field="roleName" >角色名称</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div region="center"  style="width: 20%;padding-top: 80px;">
+                    <div style="margin: 0 auto;height: 15%;text-align: center">
+                        <a readonly="true" onclick="" class="easyui-linkbutton" data-options="width:80"> &gt; </a>
+                    </div>
+                    <div style="margin: 0 auto;height: 15%;text-align: center">
+                        <a readonly="true" onclick="" class="easyui-linkbutton" data-options="width:80">&gt;&gt;</a>
+                    </div>
+                    <div style="margin: 0 auto;height: 15%;text-align: center">
+                        <a readonly="true" onclick="" class="easyui-linkbutton" data-options="width:80">&lt;</a>
+                    </div>
+                    <div style="margin: 0 auto;height: 15%;text-align: center">
+                        <a readonly="true" onclick="" class="easyui-linkbutton" data-options="width:80">&lt;&lt;</a>
+                    </div>
+                </div>
+                <div region="east" collapsible="false" title="已选角色" style="width: 40%">
+                    <table id="datagridRoleSelected" class="easyui-datagrid" idField="id" style="width:100%; height:100%"
+                           th:attr="url=@{'/system/role/selectedListByUserId?userId='+${user.id}}" fit="true" singleSelect="false">
+                        <thead>
+                        <tr>
+                            <th field="roleCode">角色代码</th>
+                            <th field="roleName">角色名称</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="text-align: center" class="window-form-button">
+        <input type="button" class="easyui-linkbutton" value="关闭" onclick="cancelUserWin()"/>
+    </div>
+</div>
+<script type="text/javascript">
+    function cancelUserWin() {
+        $("#dd").dialog("close")
+    }
+</script>
+</body>
+
+</html>
